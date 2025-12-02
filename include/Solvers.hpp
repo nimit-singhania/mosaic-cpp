@@ -1,6 +1,8 @@
 #pragma once
 
-#include "pieceWiseAffineModel.hpp"
+#include "PieceWiseAffineModel.hpp"
+#include <algorithm>
+#include <map>
 
 /* We would like to learn a piecewise affine model that can represent the dynamics
  * of a system. The piecewise affine model is amenable to analysis via formal methods
@@ -19,6 +21,6 @@
  *     models.
  */
 
-piecewiseAffineModel learnModelFromData(map<vector<float>, float>& data);
+piecewiseAffineModel learnModelFromData(std::map<std::vector<float>, float>& data, float threshold);
 
-piecewiseAffineModel learnModelFromTrajectories(vector<vector<pair<float,float>>>& trajectories);
+piecewiseAffineModel learnModelFromTrajectories(std::vector<std::vector<std::pair<float,float>>>& trajectories, float threshold);

@@ -11,9 +11,9 @@
  */
 struct affineFunction
 {
-    vector<float> coeff;
+    std::vector<float> coeff;
 
-    float compute(vector<float>& input)
+    float evaluate(const std::vector<float>& input)
     {
         float result = 0;
         for (int i = 0; i < input.size(); i++)
@@ -27,13 +27,13 @@ struct affineFunction
 
 /* Predicate: A predicate is an affine inequality. For simplicity we represent
  * an affine inequality as:
- *     p(x) = f(x) <= 0, where f(x) is an affine function.
+ *     p(x) = f(x) >= 0, where f(x) is an affine function.
  * Note that this only represents strict inequality.
  */
 struct predicate
 {
-    vector<float> coeff;
-    bool evaluate(vector<float>& input)
+    std::vector<float> coeff;
+    bool evaluate(const std::vector<float>& input)
     {
         float result = 0;
         for (int i = 0; i < input.size(); i++)
@@ -41,7 +41,7 @@ struct predicate
             result+= coeff[i]*input[i];
         }
         result += coeff[input.size()];
-        return result <  0.0;
+        return result >=  0.0;
     }
 };
 
@@ -56,8 +56,8 @@ struct guardPredicate
 {
     struct orPredicate
     {
-        vector<predicate> terms;
-        bool evaluate(vector<float>& input)
+        std::vector<predicate> terms;
+        bool evaluate(const std::vector<float>& input)
         {
             for (auto& t : terms)
             {
@@ -66,10 +66,10 @@ struct guardPredicate
             }
             return false;
        }
-    }
+    };
 
-    vector<orPredicate> clauses;
-    bool evaluate(vector<float>& input)
+    std::vector<orPredicate> clauses;
+    bool evaluate(const std::vector<float>& input)
     {
         for (auto& c: clauses)
         {
@@ -95,5 +95,17 @@ struct piecewiseAffineModel
         affineFunction f;
         guardPredicate g;
     };
-    vector<region> regions;
+    std::vector<region> regions;
+
+    float evaluate(const std::vector<float>& input)
+    {
+        for (auto& r : regions)
+        {
+            if (r.g.evaluate(input))
+            {
+                return r.f.evaluate(input);
+            }
+        }
+        return 0.0; // Not reached.
+    }
 };
