@@ -9,4 +9,5 @@
 
 std::map<std::vector<float>, float> loadData(const std::string& path);
 
+void outputAffineFunction(affineFunction& f);
 void outputModel(piecewiseAffineModel& model);

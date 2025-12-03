@@ -5,7 +5,7 @@
 #include <cstdlib>
 #include <string>
 
-#define DEBUG
+// #define DEBUG
 std::map<std::vector<float>, float> loadData(const std::string& path)
 {
     std::map<std::vector<float>, float> m;
