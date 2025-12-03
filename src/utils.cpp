@@ -1,0 +1,119 @@
+#include "utils.hpp"
+
+#include <iostream>
+#include <cstdio>
+#include <cstdlib>
+#include <string>
+
+#define DEBUG
+std::map<std::vector<float>, float> loadData(const std::string& path)
+{
+    std::map<std::vector<float>, float> m;
+    FILE* fp = std::fopen(path.c_str(), "r");
+    if (!fp)
+    {
+        std::cerr << "Could not open file for loading data: " << path << std::endl;
+        return m;
+    }
+
+    // Format of the data:
+    // Each line consists of one input output pair.
+    // The values are comma separated with the last value as the output.
+    std::string buf;
+    char c;
+    while (!std::feof(fp))
+    {
+        c = std::fgetc(fp);
+        while (c != '\n' && c != EOF)
+        {
+            buf.push_back(c);
+            c = std::fgetc(fp);
+        }
+
+        // Read float values from buf.
+        std::vector<float> input;
+        int pos = 0;
+        while (pos < buf.size())
+        {
+            int end_pos = buf.find_first_of(",", pos);
+            if (end_pos == std::string::npos)
+            {
+                m.emplace(input, std::stof(buf.substr(pos).c_str()));
+                input.clear();
+                break;
+            }
+            input.push_back(std::stof(buf.substr(pos, end_pos - pos).c_str()));;
+            pos = end_pos + 1;
+        }
+        buf.clear();
+    }
+    std::fclose(fp);
+    return m;
+}
+
+void outputAffineFunction(affineFunction& f)
+{
+    for (int i = 0; i < f.coeff.size() - 1; i++)
+    {
+        std::cout << f.coeff[i] << ".x" << i << " + ";
+    }
+    std::cout << f.coeff[f.coeff.size() - 1];
+}
+
+void outputPredicate(predicate& p)
+{
+    for (int i = 0; i < p.coeff.size() - 1; i++)
+    {
+        std::cout << p.coeff[i] << ".x" << i << " + ";
+    }
+    std::cout << p.coeff[p.coeff.size() - 1] << " >= 0";
+}
+
+void outputOrPredicate(guardPredicate::orPredicate& o)
+{
+    if (o.terms.size() == 1)
+        outputPredicate(o.terms[0]);
+    else
+    {
+        std::cout << "OR(";
+        for (auto& t : o.terms)
+        {
+            outputPredicate(t);
+            std::cout << ", ";
+        }
+        std::cout << ")";
+    }
+}
+
+void outputGuardPredicate(guardPredicate& g)
+{
+    if (g.clauses.size() == 1)
+        outputOrPredicate(g.clauses[0]);
+    else
+    {
+        std::cout << "AND(";
+        for (auto& c : g.clauses)
+        {
+            outputOrPredicate(c);
+            std::cout << ", ";
+        }
+        std::cout << ")";
+    }
+}
+
+
+void outputModel(piecewiseAffineModel& model)
+{
+    int i = 0;
+    for (auto& r : model.regions)
+    {
+        std::cout << "Region " << i++ << std::endl;
+        std::cout << "-- affine function: ";
+        outputAffineFunction(r.f);
+        std::cout << std::endl;
+
+        std::cout << "-- guard: ";
+        outputGuardPredicate(r.g);
+        std::cout << std::endl;
+    }
+}

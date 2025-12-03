@@ -1,6 +1,8 @@
 #include "Solvers.hpp"
+#include "utils.hpp"
 
 #include <iostream>
+#include <string>
 
 int sample()
 {
@@ -49,7 +51,20 @@ int sample()
 int main(int argc, char** argv)
 {
     // Run a sample program and evaluate correctness.
-    sample();
+    // sample();
+
+    if (argc < 3)
+    {
+        std::cout << "Usage: ./main <path_to_data> <threshold>" << std::endl;
+        return 0;
+    }
+
+    std::cout << "Loading data ... " << std::endl;
+    auto data = loadData(std::string(argv[1]));
+    std::cout << "Training piecewise affine model." << std::endl;
+    auto m = learnModelFromData(data, std::stod(argv[2]));
+    std::cout << "Model Output: " << std::endl;
+    outputModel(m);
 
     return 0;
 }

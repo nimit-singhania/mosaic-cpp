@@ -111,7 +111,7 @@ predicate genPredicateUsingAlgLib(const set<vector<float>>& p, const set<vector<
         alglib::minlpsetlc2dense(state, a, al, au, num_constraints);
         // alglib::minlpsetalgoipm(state);
         alglib::minlpsetalgodss(state, 0.00001);
-        alglib::trace_file("DSS,PREC.F6", "trace.log");
+        // alglib::trace_file("DSS,PREC.F6", "trace.log");
         alglib::minlpoptimize(state);
         alglib::minlpresults(state, x, rep);
         if (rep.terminationtype < 0)
@@ -613,13 +613,13 @@ affineFunction genAffineFunction(map<vector<float>, float>& data, set<vector<flo
     return l;
 }
 
-guardPredicate true_predicate()
+guardPredicate true_predicate(int n)
 {
     // True predicate: 1 >= 0.
     guardPredicate g;
     guardPredicate::orPredicate o;
     predicate pred;
-    for (int i = 0; i < data.begin()->first.size(); i++)
+    for (int i = 0; i < n; i++)
     {
         pred.coeff.push_back(0.0);
     }
@@ -735,7 +735,7 @@ piecewiseAffineModel learnModelFromData(map<vector<float>, float>& data, float t
     for (; cover_size[j] == -1; j++);
     piecewiseAffineModel::region r;
     r.f = affineFunctions[j];
-    r.g = true_predicate();
+    r.g = true_predicate(data.begin()->first.size());
     model.regions.push_back(r); 
 
     return model;
