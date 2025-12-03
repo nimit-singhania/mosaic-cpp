@@ -23,6 +23,16 @@ struct affineFunction
         result += coeff[input.size()];
         return result;
     }
+
+    bool operator==(const affineFunction& f) const
+    {
+        return this->coeff == f.coeff;
+    }
+
+    bool operator!=(const affineFunction& f) const
+    {
+        return this->coeff != f.coeff;
+    }
 };
 
 /* Predicate: A predicate is an affine inequality. For simplicity we represent
@@ -42,6 +52,16 @@ struct predicate
         }
         result += coeff[input.size()];
         return result >=  0.0;
+    }
+
+    bool operator==(const predicate& p) const
+    {
+        return this->coeff == p.coeff;
+    }
+
+    bool operator!=(const predicate& p) const
+    {
+        return this->coeff != p.coeff;
     }
 };
 
@@ -66,6 +86,14 @@ struct guardPredicate
             }
             return false;
        }
+       bool operator==(const orPredicate& p) const
+       {
+           return this->terms == p.terms;
+       }
+       bool operator!=(const orPredicate& p) const
+       {
+           return this->terms != p.terms;
+       }
     };
 
     std::vector<orPredicate> clauses;
@@ -77,6 +105,14 @@ struct guardPredicate
                 return false;
         }
         return true;
+    }
+    bool operator==(const guardPredicate& p) const
+    {
+        return this->clauses == p.clauses;
+    }
+    bool operator!=(const guardPredicate& p) const
+    {
+        return this->clauses != p.clauses;
     }
 };
 
@@ -107,5 +143,19 @@ struct piecewiseAffineModel
             }
         }
         return 0.0; // Not reached.
+    }
+    bool operator==(const piecewiseAffineModel& m) const
+    {
+        if (m.regions.size() != this->regions.size()) return false;
+        for (int i = 0; i < this->regions.size(); i++)
+        {
+            if (this->regions.at(i).f != m.regions.at(i).f) return false;
+            if (this->regions.at(i).g != m.regions.at(i).g) return false;
+        }
+        return true;
+    }
+    bool operator!=(const piecewiseAffineModel& m) const
+    {
+        return !(*this == m);
     }
 };
