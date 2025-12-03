@@ -8,7 +8,7 @@ ALGLIB provides necessary solvers for the tool to solve various regression and c
 
 To compile:
 ```
-    git clone http://github.com/nimit-singhania/mosaic-cpp
+    git clone https://github.com/nimit-singhania/mosaic-cpp.git
     cd mosaic-cpp
     tar -xvf alglib-cpp.tar.gz
     ./compile.sh
@@ -19,6 +19,13 @@ To run:
     ./main <path_to_data> <threshold>
 ```
 
-The tool accepts a csv file with rows corresponding to data vectors and first N-1 columns for the input vector while the last column for the output floating point value. Sample data is available in `test_data.txt`. This corresponds to a data-set where the input is a 2-dimensional floating vector, and the output is a single floating point value. The threshold corresponds to the error threshold acceptable on the model output. For more details, please refer to [1].
+The tool accepts a CSV file with rows corresponding to data vectors and first N-1 columns for the input vector while the last column for the output floating point value. Sample data is available in `test_data.txt`. This corresponds to a data-set where the input is a 2-dimensional floating vector, and the output is a single floating point value. The threshold corresponds to the error threshold acceptable on the model output. To run the tool on this test data:
+
+```
+    ./main test_data.txt 0.1
+```
+
+
+For more details, please refer to [1].
 
 [1] Rajeev Alur, Nimit Singhania. Precise Piecewise Affine Models from Input Output Data. EMSOFT 2013.
