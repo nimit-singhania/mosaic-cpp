@@ -117,3 +117,35 @@ void outputModel(piecewiseAffineModel& model)
         std::cout << std::endl;
     }
 }
+
+guardPredicate true_predicate(int n)
+{
+    // True predicate: 1 >= 0.
+    guardPredicate g;
+    guardPredicate::orPredicate o;
+    predicate pred;
+    for (int i = 0; i < n; i++)
+    {
+        pred.coeff.push_back(0.0);
+    }
+    pred.coeff.push_back(1.0);
+    o.terms.push_back(pred);
+    g.clauses.push_back(o);
+    return g;
+}
+
+guardPredicate false_predicate(int n)
+{
+    // True predicate: 1 >= 0.
+    guardPredicate g;
+    guardPredicate::orPredicate o;
+    predicate pred;
+    for (int i = 0; i < n; i++)
+    {
+        pred.coeff.push_back(0.0);
+    }
+    pred.coeff.push_back(-1.0);
+    o.terms.push_back(pred);
+    g.clauses.push_back(o);
+    return g;
+} 
