@@ -9,9 +9,12 @@
 
 std::map<std::vector<float>, float> loadData(const std::string& path);
 
-void outputGuardPredicate(guardPredicate& g);
-void outputAffineFunction(affineFunction& f);
-void outputModel(piecewiseAffineModel& model);
+std::string vectorString(const std::vector<float>& v);
+
+void outputPredicate(const predicate& g);
+void outputGuardPredicate(const guardPredicate& g);
+void outputAffineFunction(const affineFunction& f);
+void outputModel(const piecewiseAffineModel& model);
 
 guardPredicate true_predicate(int n);
 guardPredicate false_predicate(int n);

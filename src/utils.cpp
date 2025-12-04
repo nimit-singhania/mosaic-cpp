@@ -51,7 +51,20 @@ std::map<std::vector<float>, float> loadData(const std::string& path)
     return m;
 }
 
-void outputAffineFunction(affineFunction& f)
+std::string vectorString(const std::vector<float>& v)
+{
+    std::string s;
+    s.append("(");
+    for (auto x: v)
+    {
+        s.append(std::to_string(x));
+        s.append(", ");
+    }
+    s.append(")");
+    return s;
+}
+
+void outputAffineFunction(const affineFunction& f)
 {
     for (int i = 0; i < f.coeff.size() - 1; i++)
     {
@@ -60,7 +73,7 @@ void outputAffineFunction(affineFunction& f)
     std::cout << f.coeff[f.coeff.size() - 1];
 }
 
-void outputPredicate(predicate& p)
+void outputPredicate(const predicate& p)
 {
     for (int i = 0; i < p.coeff.size() - 1; i++)
     {
@@ -69,7 +82,7 @@ void outputPredicate(predicate& p)
     std::cout << p.coeff[p.coeff.size() - 1] << " >= 0";
 }
 
-void outputOrPredicate(guardPredicate::orPredicate& o)
+void outputOrPredicate(const guardPredicate::orPredicate& o)
 {
     if (o.terms.size() == 1)
         outputPredicate(o.terms[0]);
@@ -85,7 +98,7 @@ void outputOrPredicate(guardPredicate::orPredicate& o)
     }
 }
 
-void outputGuardPredicate(guardPredicate& g)
+void outputGuardPredicate(const guardPredicate& g)
 {
     if (g.clauses.size() == 1)
         outputOrPredicate(g.clauses[0]);
@@ -102,7 +115,7 @@ void outputGuardPredicate(guardPredicate& g)
 }
 
 
-void outputModel(piecewiseAffineModel& model)
+void outputModel(const piecewiseAffineModel& model)
 {
     int i = 0;
     for (auto& r : model.regions)
