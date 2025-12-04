@@ -3,6 +3,8 @@
 #include "PieceWiseAffineModel.hpp"
 #include <set>
 
+#define NUM_ITERATIONS 100
+
 // Learn a predicate (x*c + c0 >= 0) that separates points in p from points in n,
 // i.e. predicate is true on points in p, and false on points in n.
 predicate genPredicateUsingAlgLib(const std::set<std::vector<float>>& p,

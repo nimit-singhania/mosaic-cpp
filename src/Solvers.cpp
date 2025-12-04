@@ -8,65 +8,6 @@
 
 using namespace std;
 
-void split_group(const set<vector<float>>& g, const vector<float>& ce, vector<set<vector<float>>>& groups,
-                 vector<set<vector<float>>>& new_groups)
-{
-    // Splits group g into two groups, such that the counterexample ce can be accomodated.
-    // Updates groups with the new groups while erasing old group g.
-
-    set<vector<float>> g_less, g_more;
-    while (true)
-    {
-        // Find an affine function f, so that f(ce) = 0, f(p) != 0 for all p in g.
-        affineFunction f = findAffineFunctionPassingThroughCEOnlyAlternate(g, ce);
-
-        g_less.clear();
-        g_more.clear();
-        bool found = true;
-        for (auto p: g)
-        {
-            if (f.evaluate(p) > 0)
-                g_more.emplace(p);
-            else if (f.evaluate(p) < 0)
-                g_less.emplace(p);
-            else
-            {
-                found = false;
-                break;
-            }
-        }
-        // Splitting not found.
-        if (!found) continue;
-        if (g_more.size() > 0 && g_less.size() > 0)
-            break;
-    }
-
-#ifdef DEBUG
-    std::cerr << "Split Group Result: " << std::endl;
-    for (auto &p : g_less)
-    {
-        std::cerr << "(";
-        for (auto &c : p)
-            std::cerr << c << ", ";
-        std::cerr << "),";
-    }
-    std::cerr << std::endl;
-    for (auto &p : g_more)
-    {
-        std::cerr << "(";
-        for (auto &c : p)
-            std::cerr << c << ", ";
-        std::cerr << "),";
-    }
-#endif
-    // auto it = std::find(groups.begin(), groups.end(), g);
-    // if (it != groups.end())
-    //    groups.erase(it);
-
-    new_groups.push_back(g_more);
-    new_groups.push_back(g_less);
-}
-
 guardPredicate genPredicate(const set<vector<float>>& p,
                             const set<vector<float>>& n,
                             int num_vars)
@@ -138,6 +79,81 @@ guardPredicate genPredicate(vector<set<vector<float>>>& pos_groups,
         g.clauses.push_back(g_n.clauses[0]);
     }
     return g;
+}
+
+void split_group(const set<vector<float>>& g, const vector<float>& ce, vector<set<vector<float>>>& groups,
+                 vector<set<vector<float>>>& new_groups)
+{
+    // Splits group g into two groups, such that the counterexample ce can be accomodated.
+    // Updates groups with the new groups while erasing old group g.
+
+    set<vector<float>> g_less, g_more;
+    bool found = false;
+    for (int i = 0; i < NUM_ITERATIONS; i++)
+    {
+        // Find an affine function f, so that f(ce) = 0, f(p) != 0 for all p in g.
+        affineFunction f = findAffineFunctionPassingThroughCEOnlyAlternate(g, ce);
+
+        g_less.clear();
+        g_more.clear();
+        for (auto p: g)
+        {
+            if (f.evaluate(p) > 0)
+                g_more.emplace(p);
+            else
+                g_less.emplace(p);
+        }
+        if (g_more.size() > 0 && g_less.size() > 0 &&
+            !genPredicate(g_less, {ce}, ce.size()).clauses.empty() &&
+            !genPredicate(g_more, {ce}, ce.size()).clauses.empty())
+        {
+            found = true;
+            break;
+        }
+    }
+    if (!found)
+    {
+        // Manual heuristics to split the set.
+        g_less.clear();
+        g_more = g;
+        for (int i = 0; i < g.size() - 1; i++)
+        {
+            auto p = *g_more.begin();
+            g_less.insert(p);
+            g_more.erase(g_more.begin());
+            if (!genPredicate(g_less, {ce}, ce.size()).clauses.empty() &&
+                !genPredicate(g_more, {ce}, ce.size()).clauses.empty())
+            {
+                found = true;
+                break;
+            }
+        }
+    }
+
+#ifdef DEBUG
+    std::cerr << "Split Group Result: " << std::endl;
+    for (auto &p : g_less)
+    {
+        std::cerr << "(";
+        for (auto &c : p)
+            std::cerr << c << ", ";
+        std::cerr << "),";
+    }
+    std::cerr << std::endl;
+    for (auto &p : g_more)
+    {
+        std::cerr << "(";
+        for (auto &c : p)
+            std::cerr << c << ", ";
+        std::cerr << "),";
+    }
+#endif
+    // auto it = std::find(groups.begin(), groups.end(), g);
+    // if (it != groups.end())
+    //    groups.erase(it);
+
+    new_groups.push_back(g_more);
+    new_groups.push_back(g_less);
 }
 
 guardPredicate genGuard(set<vector<float>>& pos_points,

@@ -262,7 +262,7 @@ affineFunction findAffineFunctionPassingThroughCEOnly(const set<vector<float>>& 
 affineFunction findAffineFunctionPassingThroughCEOnlyAlternate(const set<vector<float>>& g, const vector<float>& ce)
 {
     // Using AlgLib.
-    while (true)
+    for (int i = 0; i < NUM_ITERATIONS; i++)
     {
         affineFunction f;
         float ce_val = 0.0;
