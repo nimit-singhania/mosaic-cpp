@@ -1,4 +1,5 @@
 #include "Solvers.hpp"
+#include "utils.hpp"
 
 #include <set>
 #include <functional>
@@ -539,7 +540,7 @@ float distance(const vector<float>& p1, const vector<float>& p2)
     return std::sqrt(dist);
 }
 
-affineFunction genAffineFunction(map<vector<float>, float>& data, set<vector<float>>& covered, float threshold)
+affineFunction genAffineFunction(const map<vector<float>, float>& data, set<vector<float>>& covered, float threshold)
 {
     // Find a point that is not covered.
     // Seed point.
@@ -585,7 +586,7 @@ affineFunction genAffineFunction(map<vector<float>, float>& data, set<vector<flo
     for (auto& p : seed_points)
     {
         new_point = p;
-        new_point.emplace_back(data[p]);
+        new_point.emplace_back(data.at(p));
         points.emplace(new_point);
     }
     affineFunction l = trainModelUsingAlgLib(points);
@@ -605,7 +606,7 @@ affineFunction genAffineFunction(map<vector<float>, float>& data, set<vector<flo
         for (auto& p : l_covered)
         {
             vector<float> new_point = p;
-            new_point.push_back(data[p]);
+            new_point.push_back(data.at(p));
             points.emplace(new_point);
         }
         l = trainModelUsingAlgLib(points);
@@ -613,24 +614,7 @@ affineFunction genAffineFunction(map<vector<float>, float>& data, set<vector<flo
     return l;
 }
 
-guardPredicate true_predicate(int n)
-{
-    // True predicate: 1 >= 0.
-    guardPredicate g;
-    guardPredicate::orPredicate o;
-    predicate pred;
-    for (int i = 0; i < n; i++)
-    {
-        pred.coeff.push_back(0.0);
-    }
-    pred.coeff.push_back(1.0);
-    o.terms.push_back(pred);
-    g.clauses.push_back(o);
-    return g;
-}
-    
- 
-piecewiseAffineModel learnModelFromData(map<vector<float>, float>& data, float threshold)
+piecewiseAffineModel learnModelFromData(const map<vector<float>, float>& data, float threshold)
 {
     // learn affine functions.
     vector<affineFunction> affineFunctions;
