@@ -11,21 +11,16 @@
 
 using namespace std;
 
-predicate genPredicateUsingAlgLib(const set<vector<float>>& p, const set<vector<float>>& n)
+predicate genPredicateUsingAlgLib(const set<vector<float>>& p, const set<vector<float>>& n,
+                                  int num_vars)
 {
     // Set up an min LP solver.
 
 #ifdef DEBUG
     std::cerr << "Solving predicate for points." << std::endl;
-    
-#endif
-    // cost is to maximize the distance from all points (which is quadratic generally), we set it to 0, to find
-    // a feasible solution for now.
-    alglib::real_2d_array a;
-    int num_vars = p.begin()->size() + 1;
-    int num_constraints = p.size() + n.size();
-    a.setlength(num_constraints, num_vars);
 
+#endif
+    int num_constraints = p.size() + n.size();
     // Convert problem to standard form.
     float max = 1.0;
     for (auto &x: p)
@@ -35,13 +30,18 @@ predicate genPredicateUsingAlgLib(const set<vector<float>>& p, const set<vector<
         for (auto c : x)
             if (max < abs(c)) max = abs(c);
 
+    // cost is to maximize the distance from all points (which is quadratic generally), we set it to 0, to find
+    // a feasible solution for now.
+    alglib::real_2d_array a;
+    a.setlength(num_constraints, num_vars + 1);
+
     // Initialize constraints array.
     int i = 0;
     for (auto& x : p)
     {
         for (int j = 0; j < x.size(); j++)
         {
-            a[i][j] = x[j]/max;
+            a[i][j] = x[j];
         }
         a[i][x.size()] = 1;
         i++;
@@ -50,7 +50,7 @@ predicate genPredicateUsingAlgLib(const set<vector<float>>& p, const set<vector<
     {
         for (int j = 0; j < x.size(); j++)
         {
-            a[i][j] = x[j]/max;
+            a[i][j] = x[j];
         }
         a[i][x.size()] = 1;
         i++;
@@ -63,48 +63,49 @@ predicate genPredicateUsingAlgLib(const set<vector<float>>& p, const set<vector<
     i = 0;
     for (int j = 0; j < p.size(); j++)
     {
-        al[i] = 0.1/(max*num_vars);
+        al[i] = 0.001;
         au[i] = alglib::fp_posinf;
         i++;
     }
     for (int j = 0; j < n.size(); j++)
     {
         al[i] = alglib::fp_neginf;
-        au[i] = -0.1/(max*num_vars);
+        au[i] = -0.001;
         i++;
     }
 
     // Initialize variable bounds.
     alglib::real_1d_array bu, bl;
-    bu.setlength(num_vars);
-    bl.setlength(num_vars);
-    for (int j = 0; j < num_vars - 1; j++)
+    bu.setlength(num_vars + 1);
+    bl.setlength(num_vars + 1);
+    for (int j = 0; j < num_vars; j++)
     {
         bl[j] = -1.0;
         bu[j] = 1.0;
     }
-    bl[num_vars - 1] = -num_vars;
-    bu[num_vars - 1] = num_vars; // This bound is on the constant which is scaled to shift the equilibrium.
+    bl[num_vars] = -num_vars*max;
+    bu[num_vars] = num_vars*max; // This bound is on the constant which is scaled to shift the equilibrium.
 
     alglib::real_1d_array s;
-    s.setlength(num_vars);
-    for (int j = 0; j < num_vars; j++)
+    s.setlength(num_vars + 1);
+    for (int j = 0; j < num_vars + 1; j++)
     {
         s[j] = 1.0;
     }
     alglib::real_1d_array c;
-    c.setlength(num_vars);
-    for (int j = 0; j < num_vars; j++)
+    c.setlength(num_vars + 1);
+    for (int j = 0; j < num_vars + 1; j++)
     {
-        c[j] = 1.0;
+        c[j] = 0.0;
     }
-    alglib::real_1d_array x;
     alglib::minlpstate state;
+    alglib::real_1d_array x;
     alglib::minlpreport rep;
 
     predicate pred;
+    
     try {
-        alglib::minlpcreate(num_vars, state);
+        alglib::minlpcreate(num_vars + 1, state);
         // alglib::minlpsetlc(state, a, ct);
         alglib::minlpsetcost(state, c);
         alglib::minlpsetscale(state, s);
@@ -149,13 +150,14 @@ predicate genPredicateUsingAlgLib(const set<vector<float>>& p, const set<vector<
         return pred;
     }
 
-    for (int i = 0; i < num_vars - 1; i++)
+    for (int i = 0; i < num_vars; i++)
     {
         pred.coeff.push_back(x[i]);
     }
-    pred.coeff.push_back(x[num_vars - 1]*max);
+    pred.coeff.push_back(x[num_vars]);
     return pred;
 }
+
 affineFunction findAffineFunctionPassingThroughCEOnlyAlternate(const set<vector<float>>& g, const vector<float>& ce)
 {
     // Using AlgLib.
@@ -173,7 +175,7 @@ affineFunction findAffineFunctionPassingThroughCEOnlyAlternate(const set<vector<
         bool function_found = true;
         for (auto &p : g)
         {
-            if (abs(f.evaluate(p)) < 0.0001)
+            if (abs(f.evaluate(p)) < 0.001)
             {
                 function_found = false;
                 break;
@@ -210,7 +212,7 @@ affineFunction findAffineFunctionPassingThroughCEOnly(const set<vector<float>>& 
         {
             s[j] = 1;
         }
-    
+
         alglib::real_1d_array x0;
         x0.setlength(ce.size() + 1);
         float ce_val = 0.0;
@@ -220,11 +222,11 @@ affineFunction findAffineFunctionPassingThroughCEOnly(const set<vector<float>>& 
             ce_val -= ce[j];
         }
         x0[ce.size()] = ce_val;
-    
+
         alglib::minnlccreate(ce.size() + 1, x0, state);
         alglib::minnlcsetcond(state, epsx, maxits);
         alglib::minnlcsetscale(state, s);
-    
+
         alglib::minnlcsetalgoorbit(state, 0, 0);
         alglib::real_1d_array nl;
         nl.setlength(g.size());
@@ -239,7 +241,7 @@ affineFunction findAffineFunctionPassingThroughCEOnly(const set<vector<float>>& 
             nu[j] = alglib::fp_posinf;
         }
         alglib::minnlcsetnlc2(state, nl, nu);
-    
+
         alglib::real_2d_array a;
         a.setlength(1, ce.size() + 1);
         for (int j = 0; j < ce.size(); j++)
@@ -250,7 +252,7 @@ affineFunction findAffineFunctionPassingThroughCEOnly(const set<vector<float>>& 
         alglib::real_1d_array al = "[0]";
         alglib::real_1d_array au = "[0]";
         alglib::minnlcsetlc2dense(state, a, al, au, 1);
-    
+
         alglib::minnlcreport rep;
         auto func = [&g](const alglib::real_1d_array &x, alglib::real_1d_array& fi, void* ptr)
             {
@@ -287,34 +289,70 @@ affineFunction findAffineFunctionPassingThroughCEOnly(const set<vector<float>>& 
     return f;
 }
 
-void split_group(const set<vector<float>>& g, const vector<float>& ce, vector<set<vector<float>>>& groups)
+void split_group(const set<vector<float>>& g, const vector<float>& ce, vector<set<vector<float>>>& groups,
+                 vector<set<vector<float>>>& new_groups)
 {
     // Splits group g into two groups, such that the counterexample ce can be accomodated.
     // Updates groups with the new groups while erasing old group g.
 
-    // Find an affine function f, so that f(ce) = 0, f(p) != 0 for all p in g.
-    affineFunction f = findAffineFunctionPassingThroughCEOnlyAlternate(g, ce);
-
     set<vector<float>> g_less, g_more;
-    for (auto p: g)
+    while (true)
     {
-        if (f.evaluate(p) > 0)
-            g_more.emplace(p);
-        else
-            g_less.emplace(p);
-    }
-    auto it = std::find(groups.begin(), groups.end(), g);
-    if (it != groups.end())
-        groups.erase(it);
+        // Find an affine function f, so that f(ce) = 0, f(p) != 0 for all p in g.
+        affineFunction f = findAffineFunctionPassingThroughCEOnlyAlternate(g, ce);
 
-    groups.push_back(g_more);
-    groups.push_back(g_less);
+        g_less.clear();
+        g_more.clear();
+        bool found = true;
+        for (auto p: g)
+        {
+            if (f.evaluate(p) > 0)
+                g_more.emplace(p);
+            else if (f.evaluate(p) < 0)
+                g_less.emplace(p);
+            else
+            {
+                found = false;
+                break;
+            }
+        }
+        // Splitting not found.
+        if (!found) continue;
+        if (g_more.size() > 0 && g_less.size() > 0)
+            break;
+    }
+
+#ifdef DEBUG
+    std::cerr << "Split Group Result: " << std::endl;
+    for (auto &p : g_less)
+    {
+        std::cerr << "(";
+        for (auto &c : p)
+            std::cerr << c << ", ";
+        std::cerr << "),";
+    }
+    std::cerr << std::endl;
+    for (auto &p : g_more)
+    {
+        std::cerr << "(";
+        for (auto &c : p)
+            std::cerr << c << ", ";
+        std::cerr << "),";
+    }
+#endif
+    // auto it = std::find(groups.begin(), groups.end(), g);
+    // if (it != groups.end())
+    //    groups.erase(it);
+
+    new_groups.push_back(g_more);
+    new_groups.push_back(g_less);
 }
 
 guardPredicate genPredicate(const set<vector<float>>& p,
-                            const set<vector<float>>& n)
+                            const set<vector<float>>& n,
+                            int num_vars)
 {
-    predicate pred = genPredicateUsingAlgLib(p, n);
+    predicate pred = genPredicateUsingAlgLib(p, n, num_vars);
     if (pred.coeff.empty()) return guardPredicate();
 
     // Check predicate.
@@ -355,13 +393,13 @@ guardPredicate genPredicate(const set<vector<float>>& p,
 }
 
 guardPredicate genPredicate(vector<set<vector<float>>>& pos_groups,
-                            set<vector<float>>& n)
+                            set<vector<float>>& n, int num_vars)
 {
     guardPredicate g;
     guardPredicate::orPredicate o;
     for (auto& p : pos_groups)
     {
-        guardPredicate g_p = genPredicate(p, n);
+        guardPredicate g_p = genPredicate(p, n, num_vars);
         if (g_p.clauses.empty()) return guardPredicate();
         o.terms.push_back(g_p.clauses[0].terms[0]);
     }
@@ -370,12 +408,13 @@ guardPredicate genPredicate(vector<set<vector<float>>>& pos_groups,
 }
 
 guardPredicate genPredicate(vector<set<vector<float>>>& pos_groups,
-                            vector<set<vector<float>>>& neg_groups)
+                            vector<set<vector<float>>>& neg_groups,
+                            int num_vars)
 {
     guardPredicate g;
     for (auto& n: neg_groups)
     {
-        guardPredicate g_n = genPredicate(pos_groups, n);
+        guardPredicate g_n = genPredicate(pos_groups, n, num_vars);
         if (g_n.clauses.empty()) return guardPredicate();
         g.clauses.push_back(g_n.clauses[0]);
     }
@@ -383,7 +422,8 @@ guardPredicate genPredicate(vector<set<vector<float>>>& pos_groups,
 }
 
 guardPredicate genGuard(set<vector<float>>& pos_points,
-                        set<vector<float>>& neg_points)
+                        set<vector<float>>& neg_points,
+                        int num_vars)
 {
     // We collect groups of positive and negative points.
     // Each group forms a cluster that is separated simultaneously
@@ -391,6 +431,9 @@ guardPredicate genGuard(set<vector<float>>& pos_points,
     // learn a single separator for all points in the group, thereby
     // improving the model learnt.
     vector<set<vector<float>>> pos_groups, neg_groups;
+
+    if (pos_points.size() == 0) return false_predicate(num_vars);
+    if (neg_points.size() == 0) return true_predicate(num_vars);
 
     pos_groups.push_back({*pos_points.begin()});
     neg_groups.push_back({*neg_points.begin()});
@@ -401,7 +444,7 @@ guardPredicate genGuard(set<vector<float>>& pos_points,
 #ifdef DEBUG
         // std::cerr << "Iteration " << iter_count++ << std::endl;
 #endif
-        guardPredicate g = genPredicate(pos_groups, neg_groups);
+        guardPredicate g = genPredicate(pos_groups, neg_groups, num_vars);
         vector<vector<float>> pos_counterexamples, neg_counterexamples;
         for (auto& p : pos_points)
         {
@@ -423,23 +466,27 @@ guardPredicate genGuard(set<vector<float>>& pos_points,
             // auto idx = alglib::randominteger(pos_counterexamples.size());
             // auto pos_ce = pos_counterexamples[idx];
             auto pos_ce = *pos_counterexamples.begin();
+            vector<set<vector<float>>> new_groups;
             for (auto& n : neg_groups)
             {
-                if (genPredicate({pos_ce}, n).clauses.empty())
+                if (genPredicate({pos_ce}, n, num_vars).clauses.empty())
                 {
                     // pos_ce conflicts with n.
                     // n needs to be split.
 #ifdef DEBUG
                     std::cerr << "Split Groups call: " << iter_count++ << std::endl;
 #endif
-                    split_group(n, pos_ce, neg_groups);
+                    split_group(n, pos_ce, neg_groups, new_groups);
                 }
+                else
+                    new_groups.push_back(n);
             }
+            neg_groups = new_groups;
             bool merged = false;
             for (auto& p : pos_groups)
             {
                 p.insert(pos_ce);
-                if (genPredicate(neg_groups, p).clauses.empty() == false)
+                if (genPredicate(neg_groups, p, num_vars).clauses.empty() == false)
                 {
                     merged = true;
                     break;
@@ -460,20 +507,27 @@ guardPredicate genGuard(set<vector<float>>& pos_points,
             // auto idx = alglib::randominteger(neg_counterexamples.size());
             // auto neg_ce = neg_counterexamples[idx];
             auto neg_ce = *neg_counterexamples.begin();
+            vector<set<vector<float>>> new_groups;
             for (auto& p : pos_groups)
             {
-                if (genPredicate({neg_ce}, p).clauses.empty())
+                if (genPredicate({neg_ce}, p, num_vars).clauses.empty())
                 {
+#ifdef DEBUG
+                    std::cerr << "Split Groups call: " << iter_count++ << std::endl;
+#endif
                     // neg_ce conflicts with p.
                     // p needs to be split.
-                    split_group(p, neg_ce, pos_groups);
+                    split_group(p, neg_ce, pos_groups, new_groups);
                 }
+                else
+                    new_groups.push_back(p);
             }
+            pos_groups = new_groups;
             bool merged = false;
             for (auto& n : neg_groups)
             {
                 n.insert(neg_ce);
-                if (genPredicate(pos_groups, n).clauses.empty() == false)
+                if (genPredicate(pos_groups, n, num_vars).clauses.empty() == false)
                 {
                     merged = true;
                     break;
@@ -540,7 +594,8 @@ float distance(const vector<float>& p1, const vector<float>& p2)
     return std::sqrt(dist);
 }
 
-affineFunction genAffineFunction(const map<vector<float>, float>& data, set<vector<float>>& covered, float threshold)
+affineFunction genAffineFunction(const map<vector<float>, float>& data, set<vector<float>>& covered,
+                                 float threshold, int num_vars)
 {
     // Find a point that is not covered.
     // Seed point.
@@ -557,7 +612,7 @@ affineFunction genAffineFunction(const map<vector<float>, float>& data, set<vect
     // Find atleast N + 1 points around the seed point to learn a model.
     set<vector<float>> seed_points; 
     seed_points.emplace(x_p);
-    for (int i = 0; i < data.begin()->first.size() + 2; i++)
+    for (int i = 0; i < num_vars + 2; i++)
     {
         // Find next point.
         vector<float> min_point = x_p;
@@ -577,7 +632,7 @@ affineFunction genAffineFunction(const map<vector<float>, float>& data, set<vect
 
 #ifdef CHECK
     // No function found!
-    if (seed_points.size() < data.begin()->first.size() + 2)
+    if (seed_points.size() < num_vars + 2)
         return affineFunction();
 #endif
 
@@ -616,13 +671,17 @@ affineFunction genAffineFunction(const map<vector<float>, float>& data, set<vect
 
 piecewiseAffineModel learnModelFromData(const map<vector<float>, float>& data, float threshold)
 {
+    if (data.size() == 0) return piecewiseAffineModel();
+
+    int num_vars = data.begin()->first.size();
+
     // learn affine functions.
     vector<affineFunction> affineFunctions;
     set<vector<float>> covered;
 
     while (covered.size() < data.size())
     {
-        affineFunction l = genAffineFunction(data, covered, threshold);
+        affineFunction l = genAffineFunction(data, covered, threshold, num_vars);
         if (l.coeff.empty()) break;
         for (auto p : data)
         {
@@ -705,7 +764,8 @@ piecewiseAffineModel learnModelFromData(const map<vector<float>, float>& data, f
         std::cerr << "Number of positive points: " << positive_points.size()
                   << ", number of negative points: " << neg_points.size() << std::endl;
 #endif
-        guardPredicate g = genGuard(positive_points, neg_points);
+        guardPredicate g = genGuard(positive_points, neg_points,
+                                    num_vars);
         piecewiseAffineModel::region r;
         r.f = affineFunctions[i];
         r.g = g;
