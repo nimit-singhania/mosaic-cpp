@@ -8,11 +8,72 @@
 
 using namespace std;
 
+void genPredicateError(const vector<float>& x, const set<vector<float>>& p,
+                       const set<vector<float>>& n, const predicate& pred)
+{
+    std::cerr << "Predicate not satisfied for point: " << vectorString(x) << "!" << std::endl;
+    std::cerr << "Set of input points: " << std::endl;
+    for (auto & e : p)
+    {
+        std::cerr << vectorString(e) << ", ";
+    }
+    std::cerr <<std::endl;
+    for (auto & e : n)
+    {
+        std::cerr << vectorString(e) << ", ";
+    }
+    std::cerr <<std::endl;
+    std::cerr << "Predicate: ";
+    outputPredicate(pred);
+    std::cerr <<std::endl;
+}
+
 guardPredicate genPredicate(const set<vector<float>>& p,
                             const set<vector<float>>& n,
                             int num_vars)
 {
-    predicate pred = genPredicateUsingAlgLib(p, n, num_vars);
+    bool found = false;
+    predicate pred;
+
+    // Try simple heuristics: xi >= n for satisfiability.
+    for (int i = 0; i < num_vars; i++)
+    {
+        float max_p = p.begin()->at(i), min_p = p.begin()->at(i);
+        float max_n = n.begin()->at(i), min_n = n.begin()->at(i);
+        for (auto & x: p)
+        {
+            if (max_p < x[i]) max_p = x[i];
+            if (min_p > x[i]) min_p = x[i];
+        }
+
+        for (auto & x: n)
+        {
+            if (max_n < x[i]) max_n = x[i];
+            if (min_n > x[i]) min_n = x[i];
+        }
+
+        if (max_p >= min_n && max_n >= min_p) continue;
+
+        for (int j = 0; j < i; j++) pred.coeff.push_back(0.0);
+        if (min_p >= max_n)
+        {
+            pred.coeff.push_back(1.0);
+            for (int j = i+1; j < num_vars; j++) pred.coeff.push_back(0.0);
+            pred.coeff.push_back(-(min_p + max_n)/2);
+        }
+        else
+        {
+            pred.coeff.push_back(-1.0);
+            for (int j = i+1; j < num_vars; j++) pred.coeff.push_back(0.0);
+            pred.coeff.push_back((min_n + max_p)/2);
+        }
+        found = true;
+        break;
+    }
+
+    if (!found)
+        pred = genPredicateUsingAlgLib(p, n, num_vars);
+
     if (pred.coeff.empty()) return guardPredicate();
 
     // Check predicate.
@@ -21,26 +82,16 @@ guardPredicate genPredicate(const set<vector<float>>& p,
     {
         if (pred.evaluate(x) == false)
         {
-            std::cerr << "Error generating predicate! Please check predicate.";
-            std::cerr << "Point: (";
-            for (int i = 0; i < x.size(); i++) std::cerr << x[i] << ", ";
-            std::cerr << ")";
-            std::cerr << ", Predicate: (";
-            for (auto c : pred.coeff) std::cerr << c << ", ";
-            std::cerr << ")" << std::endl;
+            genPredicateError(x, p, n, pred);
+            return guardPredicate();
         }
     }
     for (auto & x : n)
     {
         if (pred.evaluate(x) == true)
         {
-            std::cerr << "Error generating predicate! Please check predicate." << std::endl;
-            std::cerr << "Point: (";
-            for (int i = 0; i < x.size(); i++) std::cerr << x[i] << ", ";
-            std::cerr << ")";
-            std::cerr << ", Predicate: (";
-            for (auto c : pred.coeff) std::cerr << c << ", ";
-            std::cerr << ")" << std::endl;
+            genPredicateError(x, p, n, pred);
+            return guardPredicate();
         }
     }
 #endif
@@ -134,18 +185,12 @@ void split_group(const set<vector<float>>& g, const vector<float>& ce, vector<se
     std::cerr << "Split Group Result: " << std::endl;
     for (auto &p : g_less)
     {
-        std::cerr << "(";
-        for (auto &c : p)
-            std::cerr << c << ", ";
-        std::cerr << "),";
+        std::cerr << vectorString(p) << ", ";
     }
     std::cerr << std::endl;
     for (auto &p : g_more)
     {
-        std::cerr << "(";
-        for (auto &c : p)
-            std::cerr << c << ", ";
-        std::cerr << "),";
+        std::cerr << vectorString(p) << ", ";
     }
 #endif
     // auto it = std::find(groups.begin(), groups.end(), g);
@@ -308,7 +353,7 @@ affineFunction genAffineFunction(const map<vector<float>, float>& data, set<vect
     }
 
     // Find atleast N + 1 points around the seed point to learn a model.
-    set<vector<float>> seed_points; 
+    set<vector<float>> seed_points;
     seed_points.emplace(x_p);
     for (int i = 0; i < num_vars + 2; i++)
     {
