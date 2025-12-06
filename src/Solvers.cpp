@@ -5,6 +5,9 @@
 #include <iostream>
 
 // #define DEBUG
+#define SIMPLIFY
+#define UNIGRAM_PREDICATE
+#define BIGRAM_PREDICATE
 
 using namespace std;
 
@@ -38,6 +41,7 @@ guardPredicate genPredicate(const set<vector<float>>& p,
     if (p.size() == 0) return false_predicate(num_vars);
     if (n.size() == 0) return true_predicate(num_vars);
 
+#ifdef UNIGRAM_PREDICATE
     // Try simple heuristics: xi >= n for satisfiability.
     for (int i = 0; i < num_vars; i++)
     {
@@ -73,7 +77,9 @@ guardPredicate genPredicate(const set<vector<float>>& p,
         found = true;
         break;
     }
+#endif
 
+#ifdef BIGRAM_PREDICATE
     // Another heuristic: xi + xj >= n.
     if (!found)
         for (int i = 0; i < num_vars; i++)
@@ -116,6 +122,8 @@ guardPredicate genPredicate(const set<vector<float>>& p,
             if (found) break;
         }
 
+#endif
+
     if (!found)
         pred = genPredicateUsingAlgLib(p, n, num_vars);
 
@@ -148,8 +156,8 @@ guardPredicate genPredicate(const set<vector<float>>& p,
     return g;
 }
 
-guardPredicate genPredicate(vector<set<vector<float>>>& pos_groups,
-                            set<vector<float>>& n, int num_vars)
+guardPredicate genPredicate(const vector<set<vector<float>>>& pos_groups,
+                            const set<vector<float>>& n, int num_vars)
 {
     guardPredicate g;
     guardPredicate::orPredicate o;
@@ -163,8 +171,8 @@ guardPredicate genPredicate(vector<set<vector<float>>>& pos_groups,
     return g;
 }
 
-guardPredicate genPredicate(vector<set<vector<float>>>& pos_groups,
-                            vector<set<vector<float>>>& neg_groups,
+guardPredicate genPredicate(const vector<set<vector<float>>>& pos_groups,
+                            const vector<set<vector<float>>>& neg_groups,
                             int num_vars)
 {
     guardPredicate g;
@@ -248,6 +256,57 @@ void split_group(const set<vector<float>>& g, const vector<float>& ce, vector<se
     new_groups.push_back(g_less);
 }
 
+guardPredicate simplify(const vector<set<vector<float>>>& pos_groups,
+                        const vector<set<vector<float>>>& neg_groups,
+                        int num_vars)
+{
+    // Try merging pos_groups, if extraneous groups are formed.
+    vector<set<vector<float>>> simplified_pos_groups, simplified_neg_groups;
+    simplified_pos_groups.push_back(pos_groups[0]);
+    for (int i = 1; i < pos_groups.size(); i++)
+    {
+        bool merged = false;
+        // Check if pos_group[i] can be merged with any of the simplified groups.
+        for (int j = 0; j < simplified_pos_groups.size(); j++)
+        {
+            auto merged_group = pos_groups[i];
+            for (auto & x : simplified_pos_groups[j])
+                merged_group.emplace(x);
+            if (genPredicate(neg_groups, merged_group, num_vars).clauses.empty())
+                continue;
+            // Merging is feasible.
+            merged = true;
+            for (auto & x: pos_groups[i])
+                simplified_pos_groups[j].emplace(x);
+            break;
+        }
+        if (!merged)
+            simplified_pos_groups.push_back(pos_groups[i]);
+    }
+    simplified_neg_groups.push_back(neg_groups[0]);
+    for (int i = 1; i < neg_groups.size(); i++)
+    {
+        bool merged = false;
+        // Check if neg_group[i] can be merged with any of the simplified groups.
+        for (int j = 0; j < simplified_neg_groups.size(); j++)
+        {
+            auto merged_group = neg_groups[i];
+            for (auto & x : simplified_neg_groups[j])
+                merged_group.emplace(x);
+            if (genPredicate(pos_groups, merged_group, num_vars).clauses.empty())
+                continue;
+            // Merging is feasible.
+            merged = true;
+            for (auto & x: neg_groups[i])
+                simplified_neg_groups[j].emplace(x);
+            break;
+        }
+        if (!merged)
+            simplified_neg_groups.push_back(neg_groups[i]);
+    }
+    return genPredicate(simplified_pos_groups, simplified_neg_groups, num_vars);
+}
+
 guardPredicate genGuard(set<vector<float>>& pos_points,
                         set<vector<float>>& neg_points,
                         int num_vars)
@@ -285,7 +344,13 @@ guardPredicate genGuard(set<vector<float>>& pos_points,
             if (g.evaluate(p) == true)
                 counterexamples.emplace_back(p);
         }
-        if (counterexamples.empty()) return g;
+        if (counterexamples.empty())
+        {
+#ifdef SIMPLIFY
+            g = simplify(pos_groups, neg_groups, num_vars);
+#endif
+            return g;
+        }
 
         auto ce = *counterexamples.begin();
         if (g.evaluate(ce) == false)
