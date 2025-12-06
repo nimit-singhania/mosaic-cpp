@@ -20,15 +20,6 @@ predicate genPredicateUsingAlgLib(const set<vector<float>>& p, const set<vector<
 
 #endif
     int num_constraints = p.size() + n.size();
-    // Convert problem to standard form.
-    float max = 1.0;
-    for (auto &x: p)
-        for (auto c : x)
-            if (max < abs(c)) max = abs(c);
-    for (auto &x: n)
-        for (auto c : x)
-            if (max < abs(c)) max = abs(c);
-
     // cost is to maximize the distance from all points (which is quadratic generally), we set it to 0, to find
     // a feasible solution for now.
     alglib::real_2d_array a;
@@ -54,6 +45,30 @@ predicate genPredicateUsingAlgLib(const set<vector<float>>& p, const set<vector<
         a[i][x.size()] = 1;
         i++;
     }
+
+    // Convert problem to standard form.
+    std::vector<float> scale_vec;
+    for (int i = 0; i < num_vars; i++)
+    {
+        float avg_absval = 0.0;
+        for (int j = 0; j < num_constraints; j++)
+        {
+            avg_absval += abs(a[j][i]);
+        }
+        avg_absval = avg_absval/num_constraints;
+        if (avg_absval < 1.0) avg_absval = 1.0;
+
+        for (int j = 0; j < num_constraints; j++)
+            a[j][i] = a[j][i] / avg_absval;
+
+        scale_vec.push_back(avg_absval);
+    }
+
+    // Compute maximum for bounds setting.
+    float max = 1.0;
+    for (int i = 0; i < num_vars; i++)
+        for (int j = 0; j < num_constraints; j++)
+            if (max < abs(a[j][i])) max = abs(a[j][i]);
 
     // Initialize constraint bounds
     alglib::real_1d_array au, al;
@@ -151,7 +166,7 @@ predicate genPredicateUsingAlgLib(const set<vector<float>>& p, const set<vector<
 
     for (int i = 0; i < num_vars; i++)
     {
-        pred.coeff.push_back(x[i]);
+        pred.coeff.push_back(x[i]*scale_vec[i]);
     }
     pred.coeff.push_back(x[num_vars]);
     return pred;
