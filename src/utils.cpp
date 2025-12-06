@@ -131,6 +131,17 @@ void outputModel(const piecewiseAffineModel& model)
     }
 }
 
+float distance(const std::vector<float>& p1, const std::vector<float>& p2)
+{
+    // returns distance between p1 and p2 in the vector space using L2 norm.
+    float dist = 0.0;
+    for (int i = 0; i < p1.size(); i++)
+    {
+        dist += (p1[i]-p2[i])*(p1[i]-p2[i]);
+    }
+    return std::sqrt(dist);
+}
+
 guardPredicate true_predicate(int n)
 {
     // True predicate: 1 >= 0.
