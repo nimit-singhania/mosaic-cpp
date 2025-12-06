@@ -35,6 +35,9 @@ guardPredicate genPredicate(const set<vector<float>>& p,
     bool found = false;
     predicate pred;
 
+    if (p.size() == 0) return false_predicate(num_vars);
+    if (n.size() == 0) return true_predicate(num_vars);
+
     // Try simple heuristics: xi >= n for satisfiability.
     for (int i = 0; i < num_vars; i++)
     {
@@ -70,6 +73,48 @@ guardPredicate genPredicate(const set<vector<float>>& p,
         found = true;
         break;
     }
+
+    // Another heuristic: xi + xj >= n.
+    if (!found)
+        for (int i = 0; i < num_vars; i++)
+        {
+            for (int j = i+1; j < num_vars; j++)
+            {
+                float max_p = p.begin()->at(i) + p.begin()->at(j);
+                float min_p = p.begin()->at(i) + p.begin()->at(j);
+                float max_n = n.begin()->at(i) + n.begin()->at(j);
+                float min_n = n.begin()->at(i) + n.begin()->at(j);
+
+                for (auto & x : p)
+                {
+                    if (max_p < x[i] + x[j]) max_p = x[i] + x[j];
+                    if (min_p > x[i] + x[j]) min_p = x[i] + x[j];
+                }
+                for (auto & x : n)
+                {
+                    if (max_n < x[i] + x[j]) max_n = x[i] + x[j];
+                    if (min_n > x[i] + x[j]) min_n = x[i] + x[j];
+                }
+                if (max_p >= min_n && max_n >= min_p) continue;
+
+                for (int k = 0; k < num_vars; k++) pred.coeff.push_back(0.0);
+                if (min_p >= max_n)
+                {
+                    pred.coeff[i] = 1.0;
+                    pred.coeff[j] = 1.0;
+                    pred.coeff.push_back(-(min_p + max_n)/2);
+                }
+                else
+                {
+                    pred.coeff[i] = -1.0;
+                    pred.coeff[j] = -1.0;
+                    pred.coeff.push_back((min_n + max_p)/2);
+                }
+                found = true;
+                break;
+            }
+            if (found) break;
+        }
 
     if (!found)
         pred = genPredicateUsingAlgLib(p, n, num_vars);
@@ -140,39 +185,41 @@ void split_group(const set<vector<float>>& g, const vector<float>& ce, vector<se
 
     set<vector<float>> g_less, g_more;
     bool found = false;
-    for (int i = 0; i < NUM_ITERATIONS; i++)
-    {
-        // Find an affine function f, so that f(ce) = 0, f(p) != 0 for all p in g.
-        affineFunction f = findAffineFunctionPassingThroughCEOnlyAlternate(g, ce);
 
-        g_less.clear();
-        g_more.clear();
-        for (auto p: g)
-        {
-            if (f.evaluate(p) > 0)
-                g_more.emplace(p);
-            else
-                g_less.emplace(p);
-        }
-        if (g_more.size() > 0 && g_less.size() > 0 &&
-            !genPredicate(g_less, {ce}, ce.size()).clauses.empty() &&
+    // Manual heuristics to split the set.
+    g_less.clear();
+    g_more = g;
+    for (int i = 0; i < g.size() - 1; i++)
+    {
+        auto p = *g_more.begin();
+        g_less.insert(p);
+        g_more.erase(g_more.begin());
+        if (!genPredicate(g_less, {ce}, ce.size()).clauses.empty() &&
             !genPredicate(g_more, {ce}, ce.size()).clauses.empty())
         {
             found = true;
             break;
         }
     }
+
     if (!found)
     {
-        // Manual heuristics to split the set.
-        g_less.clear();
-        g_more = g;
-        for (int i = 0; i < g.size() - 1; i++)
+        for (int i = 0; i < NUM_ITERATIONS; i++)
         {
-            auto p = *g_more.begin();
-            g_less.insert(p);
-            g_more.erase(g_more.begin());
-            if (!genPredicate(g_less, {ce}, ce.size()).clauses.empty() &&
+            // Find an affine function f, so that f(ce) = 0, f(p) != 0 for all p in g.
+            affineFunction f = findAffineFunctionPassingThroughCEOnlyAlternate(g, ce);
+    
+            g_less.clear();
+            g_more.clear();
+            for (auto p: g)
+            {
+                if (f.evaluate(p) > 0)
+                    g_more.emplace(p);
+                else
+                    g_less.emplace(p);
+            }
+            if (g_more.size() > 0 && g_less.size() > 0 &&
+                !genPredicate(g_less, {ce}, ce.size()).clauses.empty() &&
                 !genPredicate(g_more, {ce}, ce.size()).clauses.empty())
             {
                 found = true;
@@ -225,38 +272,36 @@ guardPredicate genGuard(set<vector<float>>& pos_points,
         // std::cerr << "Iteration " << iter_count++ << std::endl;
 #endif
         guardPredicate g = genPredicate(pos_groups, neg_groups, num_vars);
-        vector<vector<float>> pos_counterexamples, neg_counterexamples;
+        vector<vector<float>> counterexamples;
         for (auto& p : pos_points)
         {
             if (g.evaluate(p) == false)
             {
-                pos_counterexamples.emplace_back(p);
+                counterexamples.emplace_back(p);
             }
         }
         for (auto& p : neg_points)
         {
             if (g.evaluate(p) == true)
-                neg_counterexamples.emplace_back(p);
+                counterexamples.emplace_back(p);
         }
-        if (pos_counterexamples.empty() && neg_counterexamples.empty()) return g;
+        if (counterexamples.empty()) return g;
 
-        // Process positive counterexample.
-        if (pos_counterexamples.size() > 0)
+        auto ce = *counterexamples.begin();
+        if (g.evaluate(ce) == false)
         {
-            // auto idx = alglib::randominteger(pos_counterexamples.size());
-            // auto pos_ce = pos_counterexamples[idx];
-            auto pos_ce = *pos_counterexamples.begin();
+            // Process positive counterexample.
             vector<set<vector<float>>> new_groups;
             for (auto& n : neg_groups)
             {
-                if (genPredicate({pos_ce}, n, num_vars).clauses.empty())
+                if (genPredicate({ce}, n, num_vars).clauses.empty())
                 {
-                    // pos_ce conflicts with n.
+                    // ce conflicts with n.
                     // n needs to be split.
 #ifdef DEBUG
                     std::cerr << "Split Groups call: " << iter_count++ << std::endl;
 #endif
-                    split_group(n, pos_ce, neg_groups, new_groups);
+                    split_group(n, ce, neg_groups, new_groups);
                 }
                 else
                     new_groups.push_back(n);
@@ -265,7 +310,7 @@ guardPredicate genGuard(set<vector<float>>& pos_points,
             bool merged = false;
             for (auto& p : pos_groups)
             {
-                p.insert(pos_ce);
+                p.insert(ce);
                 if (genPredicate(neg_groups, p, num_vars).clauses.empty() == false)
                 {
                     merged = true;
@@ -273,31 +318,29 @@ guardPredicate genGuard(set<vector<float>>& pos_points,
                 }
                 else
                 {
-                    p.erase(p.find(pos_ce));
+                    p.erase(p.find(ce));
                 }
             }
 
             if (!merged)
             {
-                pos_groups.push_back({pos_ce});
+                pos_groups.push_back({ce});
             }
         }
-        if (neg_counterexamples.size() > 0)
+        else
         {
-            // auto idx = alglib::randominteger(neg_counterexamples.size());
-            // auto neg_ce = neg_counterexamples[idx];
-            auto neg_ce = *neg_counterexamples.begin();
+            // Process negative counterexample.
             vector<set<vector<float>>> new_groups;
             for (auto& p : pos_groups)
             {
-                if (genPredicate({neg_ce}, p, num_vars).clauses.empty())
+                if (genPredicate({ce}, p, num_vars).clauses.empty())
                 {
 #ifdef DEBUG
                     std::cerr << "Split Groups call: " << iter_count++ << std::endl;
 #endif
-                    // neg_ce conflicts with p.
+                    // ce conflicts with p.
                     // p needs to be split.
-                    split_group(p, neg_ce, pos_groups, new_groups);
+                    split_group(p, ce, pos_groups, new_groups);
                 }
                 else
                     new_groups.push_back(p);
@@ -306,7 +349,7 @@ guardPredicate genGuard(set<vector<float>>& pos_points,
             bool merged = false;
             for (auto& n : neg_groups)
             {
-                n.insert(neg_ce);
+                n.insert(ce);
                 if (genPredicate(pos_groups, n, num_vars).clauses.empty() == false)
                 {
                     merged = true;
@@ -314,27 +357,16 @@ guardPredicate genGuard(set<vector<float>>& pos_points,
                 }
                 else
                 {
-                    n.erase(n.find(neg_ce));
+                    n.erase(n.find(ce));
                 }
             }
             if (!merged)
             {
-                neg_groups.push_back({neg_ce});
+                neg_groups.push_back({ce});
             }
         }
     }
     return guardPredicate();
-}
-
-float distance(const vector<float>& p1, const vector<float>& p2)
-{
-    // returns distance between p1 and p2 in the vector space using L2 norm.
-    float dist = 0.0;
-    for (int i = 0; i < p1.size(); i++)
-    {
-        dist += (p1[i]-p2[i])*(p1[i]-p2[i]);
-    }
-    return std::sqrt(dist);
 }
 
 affineFunction genAffineFunction(const map<vector<float>, float>& data, set<vector<float>>& covered,
@@ -522,7 +554,7 @@ piecewiseAffineModel learnModelFromData(const map<vector<float>, float>& data, f
     for (; cover_size[j] == -1; j++);
     piecewiseAffineModel::region r;
     r.f = affineFunctions[j];
-    r.g = true_predicate(data.begin()->first.size());
+    r.g = true_predicate(num_vars);
     model.regions.push_back(r); 
 
     return model;
