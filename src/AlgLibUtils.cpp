@@ -58,9 +58,6 @@ predicate genPredicateUsingAlgLib(const set<vector<float>>& p, const set<vector<
         avg_absval = avg_absval/num_constraints;
         if (avg_absval < 1.0) avg_absval = 1.0;
 
-        for (int j = 0; j < num_constraints; j++)
-            a[j][i] = a[j][i] / avg_absval;
-
         scale_vec.push_back(avg_absval);
     }
 
@@ -102,10 +99,11 @@ predicate genPredicateUsingAlgLib(const set<vector<float>>& p, const set<vector<
 
     alglib::real_1d_array s;
     s.setlength(num_vars + 1);
-    for (int j = 0; j < num_vars + 1; j++)
+    for (int j = 0; j < num_vars; j++)
     {
-        s[j] = 1.0;
+        s[j] = 1.0/scale_vec[j];
     }
+    s[num_vars] = 1.0;
     alglib::real_1d_array c;
     c.setlength(num_vars + 1);
     for (int j = 0; j < num_vars + 1; j++)
@@ -166,7 +164,7 @@ predicate genPredicateUsingAlgLib(const set<vector<float>>& p, const set<vector<
 
     for (int i = 0; i < num_vars; i++)
     {
-        pred.coeff.push_back(x[i]*scale_vec[i]);
+        pred.coeff.push_back(x[i]);
     }
     pred.coeff.push_back(x[num_vars]);
     return pred;
