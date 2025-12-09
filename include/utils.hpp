@@ -11,9 +11,12 @@ std::map<std::vector<float>, float> loadData(const std::string& path);
 
 std::string vectorString(const std::vector<float>& v);
 
-void outputPredicate(const predicate& g);
-void outputGuardPredicate(const guardPredicate& g);
-void outputAffineFunction(const affineFunction& f);
+void outputPredicate(const predicate& g,
+                     const std::vector<float>& scale_vec = std::vector<float>());
+void outputGuardPredicate(const guardPredicate& g,
+                          const std::vector<float>& scale_vec = std::vector<float>());
+void outputAffineFunction(const affineFunction& f,
+                          const std::vector<float>& scale_vec = std::vector<float>());
 void outputModel(const piecewiseAffineModel& model);
 
 // Utilities for simple predicates.

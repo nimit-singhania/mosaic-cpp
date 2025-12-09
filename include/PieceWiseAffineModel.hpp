@@ -135,19 +135,31 @@ struct piecewiseAffineModel
     };
     std::vector<region> regions;
 
+    // Scale vector to normalize the input for the normalization that is applied during
+    // training.
+    std::vector<float> scale_vec;
+
     float evaluate(const std::vector<float>& input)
     {
+        if (regions.size() == 0 || scale_vec.size() != input.size()) return 0.0;
+
+        std::vector<float> normalized_input;
+        for (int i = 0; i < input.size(); i++)
+            normalized_input.push_back(input.at(i)*scale_vec.at(i));
+
         for (auto& r : regions)
         {
-            if (r.g.evaluate(input))
+            if (r.g.evaluate(normalized_input))
             {
-                return r.f.evaluate(input);
+                return r.f.evaluate(normalized_input);
             }
         }
-        return 0.0; // Not reached.
+        return 0.0;
     }
     bool operator==(const piecewiseAffineModel& m) const
     {
+        if (scale_vec != m.scale_vec) return false;
+
         if (m.regions.size() != this->regions.size()) return false;
         for (int i = 0; i < this->regions.size(); i++)
         {

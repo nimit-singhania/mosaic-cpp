@@ -64,50 +64,66 @@ std::string vectorString(const std::vector<float>& v)
     return s;
 }
 
-void outputAffineFunction(const affineFunction& f)
+void outputAffineFunction(const affineFunction& f,
+                          const std::vector<float>& scale_vec)
 {
-    for (int i = 0; i < f.coeff.size() - 1; i++)
-    {
-        std::cout << f.coeff[i] << ".x" << i << " + ";
-    }
+    if (scale_vec.empty())
+        for (int i = 0; i < f.coeff.size() - 1; i++)
+        {
+            std::cout << f.coeff[i] << ".x" << i << " + ";
+        }
+    else
+        for (int i = 0; i < f.coeff.size() - 1; i++)
+        {
+            std::cout << f.coeff[i]/scale_vec[i] << ".x" << i << " + ";
+        }
     std::cout << f.coeff[f.coeff.size() - 1];
 }
 
-void outputPredicate(const predicate& p)
+void outputPredicate(const predicate& p,
+                     const std::vector<float>& scale_vec)
 {
-    for (int i = 0; i < p.coeff.size() - 1; i++)
-    {
-        std::cout << p.coeff[i] << ".x" << i << " + ";
-    }
+    if (scale_vec.empty())
+        for (int i = 0; i < p.coeff.size() - 1; i++)
+        {
+            std::cout << p.coeff[i] << ".x" << i << " + ";
+        }
+    else
+        for (int i = 0; i < p.coeff.size() - 1; i++)
+        {
+            std::cout << p.coeff[i]/scale_vec[i] << ".x" << i << " + ";
+        }
     std::cout << p.coeff[p.coeff.size() - 1] << " >= 0";
 }
 
-void outputOrPredicate(const guardPredicate::orPredicate& o)
+void outputOrPredicate(const guardPredicate::orPredicate& o,
+                       const std::vector<float>& scale_vec)
 {
     if (o.terms.size() == 1)
-        outputPredicate(o.terms[0]);
+        outputPredicate(o.terms[0], scale_vec);
     else
     {
         std::cout << "OR(";
         for (auto& t : o.terms)
         {
-            outputPredicate(t);
+            outputPredicate(t, scale_vec);
             std::cout << ", ";
         }
         std::cout << ")";
     }
 }
 
-void outputGuardPredicate(const guardPredicate& g)
+void outputGuardPredicate(const guardPredicate& g,
+                          const std::vector<float>& scale_vec)
 {
     if (g.clauses.size() == 1)
-        outputOrPredicate(g.clauses[0]);
+        outputOrPredicate(g.clauses[0], scale_vec);
     else
     {
         std::cout << "AND(";
         for (auto& c : g.clauses)
         {
-            outputOrPredicate(c);
+            outputOrPredicate(c, scale_vec);
             std::cout << ", ";
         }
         std::cout << ")";
@@ -122,11 +138,11 @@ void outputModel(const piecewiseAffineModel& model)
     {
         std::cout << "Region " << i++ << std::endl;
         std::cout << "-- affine function: ";
-        outputAffineFunction(r.f);
+        outputAffineFunction(r.f, model.scale_vec);
         std::cout << std::endl;
 
         std::cout << "-- guard: ";
-        outputGuardPredicate(r.g);
+        outputGuardPredicate(r.g, model.scale_vec);
         std::cout << std::endl;
     }
 }

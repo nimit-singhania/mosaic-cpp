@@ -7,7 +7,7 @@
 // #define DEBUG
 #define SIMPLIFY
 #define UNIGRAM_PREDICATE
-#define BIGRAM_PREDICATE
+// #define NORMALIZE
 
 #define MAX_ITERATIONS 10
 
@@ -81,7 +81,7 @@ guardPredicate genPredicate(const set<vector<float>>& p,
     }
 #endif
 
-#ifdef BIGRAM_PREDICATE
+#ifdef NORMALIZE
     // Another heuristic: xi + xj >= n.
     if (!found)
         for (int i = 0; i < num_vars; i++)
@@ -214,10 +214,39 @@ void split_group(const set<vector<float>>& g, const vector<float>& ce, vector<se
             }
         }
         if (infeasible) continue;
+
+        // Splitting found along axis i.
         found = true;
         break;
     }
-    // Global splitting heuristic.
+#ifdef NORMALIZE
+    if (!found)
+        for (int i = 0; i < ce.size(); i++)
+        {
+            for (int j = i + 1; j < ce.size(); j++)
+            {
+                g_less.clear(); g_more.clear();
+                bool infeasible = false;
+                for (auto & x : g)
+                {
+                    if (x[i] + x[j] < ce[i] + ce[j]) g_less.emplace(x);
+                    else if (x[i] + x[j] > ce[i] + ce[j]) g_more.emplace(x);
+                    else
+                    {
+                        infeasible = true;
+                        break;
+                    }
+                }
+                if (infeasible) continue;
+                // Splitting found along axis i + j.
+                found = true;
+                break;
+            }
+            if (found) break;
+        }
+#endif
+
+    // Try global splitting heuristic.
     if (!found)
     {
         g_less.clear();
@@ -483,7 +512,7 @@ affineFunction genAffineFunction(const map<vector<float>, float>& data, set<vect
     // Find atleast N + 1 points around the seed point to learn a model.
     set<vector<float>> seed_points;
     seed_points.emplace(x_p);
-    for (int i = 0; i < num_vars + 2; i++)
+    for (int i = 0; i < num_vars + 1; i++)
     {
         // Find next point.
         vector<float> min_point = x_p;
@@ -540,21 +569,62 @@ affineFunction genAffineFunction(const map<vector<float>, float>& data, set<vect
     return l;
 }
 
+std::vector<float> normalizeInput(const map<vector<float>, float>& data,
+                                  map<vector<float>, float>& normalized_data,
+                                  int num_vars)
+{
+    std::vector<float> scale_vec;
+    for (int i = 0; i < num_vars; i++)
+    {
+        scale_vec.push_back(1.0);
+    }
+    if (data.size() == 0) return scale_vec;
+
+#ifdef NORMALIZE
+    for (int i = 0; i < num_vars; i++)
+    {
+        // Normalize ith feature.
+        float feature_avg = 0.0;
+        for (auto& p : data)
+        {
+            feature_avg += p.first[i]/data.size();
+        }
+        scale_vec[i] = feature_avg;
+    }
+#endif
+    for (auto &p : data)
+    {
+        std::vector<float> normalized;
+        for (int i = 0; i < num_vars; i++)
+            normalized.push_back(p.first[i]/scale_vec[i]);
+
+        normalized_data.emplace(normalized, p.second);
+    }
+    return scale_vec;
+}
+
 piecewiseAffineModel learnModelFromData(const map<vector<float>, float>& data, float threshold)
 {
-    if (data.size() == 0) return piecewiseAffineModel();
+    piecewiseAffineModel model;
+
+    if (data.size() == 0) return model;
 
     int num_vars = data.begin()->first.size();
+
+    // Normalize input.
+    map<vector<float>, float> normalized_data;
+    auto scale_vec = normalizeInput(data, normalized_data, num_vars);
+    model.scale_vec = scale_vec;
 
     // learn affine functions.
     vector<affineFunction> affineFunctions;
     set<vector<float>> covered;
 
-    while (covered.size() < data.size())
+    while (covered.size() < normalized_data.size())
     {
-        affineFunction l = genAffineFunction(data, covered, threshold, num_vars);
+        affineFunction l = genAffineFunction(normalized_data, covered, threshold, num_vars);
         if (l.coeff.empty()) break;
-        for (auto p : data)
+        for (auto p : normalized_data)
         {
             auto x = p.first;
             if (abs(l.evaluate(x) - p.second) < threshold)
@@ -570,7 +640,7 @@ piecewiseAffineModel learnModelFromData(const map<vector<float>, float>& data, f
     vector<int> cover_size;
     for (int i = 0; i < affineFunctions.size(); i++)
         cover_size.push_back(0);
-    for (auto p : data)
+    for (auto p : normalized_data)
     {
         for (int i = 0; i < affineFunctions.size(); i++)
         {
@@ -578,8 +648,6 @@ piecewiseAffineModel learnModelFromData(const map<vector<float>, float>& data, f
                 cover_size[i]++;
         }
     }
-
-    piecewiseAffineModel model;
 
     for (int i = 0; i < affineFunctions.size() - 1; i++)
     {
@@ -595,7 +663,7 @@ piecewiseAffineModel learnModelFromData(const map<vector<float>, float>& data, f
         // Select j as the next region.
         set<vector<float>> positive_points;
         set<vector<float>> neg_points;
-        for (auto& p : data)
+        for (auto& p : normalized_data)
         {
             bool pos_label = false, neg_label = false;
             bool already_labeled = false;
