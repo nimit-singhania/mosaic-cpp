@@ -1,5 +1,6 @@
 #include "utils.hpp"
 
+
 #include <iostream>
 #include <cstdio>
 #include <cstdlib>
@@ -213,6 +214,77 @@ boost::json::object outputModelJSON(const piecewiseAffineModel& model)
     }
     model_json["scale_vec"] = scale_vec;
     return model_json;
+}
+
+affineFunction parseAffineFunctionJSON(const boost::json::object& func)
+{
+    affineFunction f;
+    auto coeffs = func.at("coeff").as_array();
+    for (auto &c : coeffs)
+    {
+        f.coeff.push_back((float)c.as_double());
+    }
+    return f;
+}
+
+predicate parsePredicateJSON(const boost::json::object& func)
+{
+    predicate g;
+    auto coeffs = func.at("coeff").as_array();
+    for (auto &c : coeffs)
+    {
+        g.coeff.push_back((float)c.as_double());
+    }
+    return g;
+}
+
+guardPredicate::orPredicate parseOrPredicateJSON(const boost::json::object& func)
+{
+    guardPredicate::orPredicate o;
+    auto terms = func.at("terms").as_array();
+    for (auto &t : terms)
+    {
+        o.terms.push_back(parsePredicateJSON(t.as_object()));
+    }
+    return o;
+}
+
+guardPredicate parseGuardPredicateJSON(const boost::json::object& func)
+{
+    guardPredicate g;
+    auto clauses = func.at("clauses").as_array();
+    for (auto &c : clauses)
+    {
+        g.clauses.push_back(parseOrPredicateJSON(c.as_object()));
+    }
+    return g;
+}
+
+piecewiseAffineModel::region parseRegionJSON(const boost::json::object& region)
+{
+    piecewiseAffineModel::region r;
+    r.f = parseAffineFunctionJSON(region.at("f").as_object());
+    r.g = parseGuardPredicateJSON(region.at("g").as_object());
+    return r;
+}
+
+piecewiseAffineModel parseModelJSON(const boost::json::object& model_json)
+{
+    piecewiseAffineModel m;
+
+    // Set scale vector.
+    auto scale_vec = model_json.at("scale_vec").as_array();
+    for (auto &s : scale_vec)
+    {
+        m.scale_vec.push_back((float)s.as_double());
+    }
+
+    auto regions = model_json.at("regions").as_array();
+    for (auto &r : regions)
+    {
+        m.regions.push_back(parseRegionJSON(r.as_object()));
+    }
+    return m;
 }
 
 float distance(const std::vector<float>& p1, const std::vector<float>& p2)

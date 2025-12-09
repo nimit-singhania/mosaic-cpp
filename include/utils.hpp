@@ -21,7 +21,9 @@ void outputAffineFunction(const affineFunction& f,
                           const std::vector<float>& scale_vec = std::vector<float>());
 void outputModel(const piecewiseAffineModel& model);
 
+// JSON utilities.
 boost::json::object outputModelJSON(const piecewiseAffineModel& model);
+piecewiseAffineModel parseModelJSON(const boost::json::object& model_json);
 
 // Utilities for simple predicates.
 guardPredicate true_predicate(int n);
