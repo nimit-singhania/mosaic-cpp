@@ -389,18 +389,18 @@ guardPredicate genGuard(set<vector<float>>& pos_points,
         // std::cerr << "Iteration " << iter_count++ << std::endl;
 #endif
         guardPredicate g = genPredicate(pos_groups, neg_groups, num_vars);
-        vector<vector<float>> counterexamples;
+        vector<vector<float>> counterexamples; 
+        for (auto& p : neg_points)
+        {
+            if (g.evaluate(p) == true)
+                counterexamples.emplace_back(p);
+        }
         for (auto& p : pos_points)
         {
             if (g.evaluate(p) == false)
             {
                 counterexamples.emplace_back(p);
             }
-        }
-        for (auto& p : neg_points)
-        {
-            if (g.evaluate(p) == true)
-                counterexamples.emplace_back(p);
         }
         if (counterexamples.empty() || iter_count == MAX_ITERATIONS)
         {
