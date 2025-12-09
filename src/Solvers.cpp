@@ -7,7 +7,7 @@
 // #define DEBUG
 #define SIMPLIFY
 #define UNIGRAM_PREDICATE
-// #define NORMALIZE
+#define NORMALIZE
 
 #define MAX_ITERATIONS 10
 
