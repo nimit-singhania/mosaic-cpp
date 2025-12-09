@@ -9,6 +9,8 @@
 #define UNIGRAM_PREDICATE
 #define BIGRAM_PREDICATE
 
+#define MAX_ITERATIONS 10
+
 using namespace std;
 
 void genPredicateError(const vector<float>& x, const set<vector<float>>& p,
@@ -325,7 +327,7 @@ guardPredicate genGuard(set<vector<float>>& pos_points,
     neg_groups.push_back({*neg_points.begin()});
 
     int iter_count = 0;
-    while (true)
+    while (iter_count <= MAX_ITERATIONS)
     {
 #ifdef DEBUG
         // std::cerr << "Iteration " << iter_count++ << std::endl;
@@ -344,7 +346,7 @@ guardPredicate genGuard(set<vector<float>>& pos_points,
             if (g.evaluate(p) == true)
                 counterexamples.emplace_back(p);
         }
-        if (counterexamples.empty())
+        if (counterexamples.empty() || iter_count == MAX_ITERATIONS)
         {
 #ifdef SIMPLIFY
             g = simplify(pos_groups, neg_groups, num_vars);
@@ -364,9 +366,10 @@ guardPredicate genGuard(set<vector<float>>& pos_points,
                     // ce conflicts with n.
                     // n needs to be split.
 #ifdef DEBUG
-                    std::cerr << "Split Groups call: " << iter_count++ << std::endl;
+                    std::cerr << "Split Groups call: " << iter_count << std::endl;
 #endif
                     split_group(n, ce, neg_groups, new_groups);
+                    iter_count++;
                 }
                 else
                     new_groups.push_back(n);
@@ -401,11 +404,12 @@ guardPredicate genGuard(set<vector<float>>& pos_points,
                 if (genPredicate({ce}, p, num_vars).clauses.empty())
                 {
 #ifdef DEBUG
-                    std::cerr << "Split Groups call: " << iter_count++ << std::endl;
+                    std::cerr << "Split Groups call: " << iter_count << std::endl;
 #endif
                     // ce conflicts with p.
                     // p needs to be split.
                     split_group(p, ce, pos_groups, new_groups);
+                    iter_count++;
                 }
                 else
                     new_groups.push_back(p);
