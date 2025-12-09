@@ -706,7 +706,7 @@ piecewiseAffineModel learnModelFromData(const map<vector<float>, float>& data, f
         guardPredicate g = genGuard(positive_points, neg_points,
                                     num_vars);
         piecewiseAffineModel::region r;
-        r.f = affineFunctions[i];
+        r.f = affineFunctions[j];
         r.g = g;
         model.regions.push_back(r);
 
