@@ -147,6 +147,74 @@ void outputModel(const piecewiseAffineModel& model)
     }
 }
 
+boost::json::object outputAffineFunctionJSON(const affineFunction& f)
+{
+    boost::json::object func;
+    boost::json::array coeffs;
+    for (auto c : f.coeff)
+        coeffs.push_back(c);
+    func["coeff"] = coeffs;
+    return func;
+}
+
+boost::json::object outputPredicateJSON(const predicate& g)
+{
+    boost::json::object func;
+    boost::json::array coeffs;
+    for (auto c : g.coeff)
+        coeffs.push_back(c);
+    func["coeff"] = coeffs;
+    return func;
+}
+
+boost::json::object outputPredicateJSON(const guardPredicate::orPredicate& g)
+{
+    boost::json::object func;
+    boost::json::array terms;
+    for (auto t : g.terms)
+        terms.push_back(outputPredicateJSON(t));
+    func["terms"] = terms;
+    return func;
+}
+
+boost::json::object outputPredicateJSON(const guardPredicate& g)
+{
+    boost::json::object func;
+    boost::json::array clauses;
+    for (auto c : g.clauses)
+        clauses.push_back(outputPredicateJSON(c));
+    func["clauses"] = clauses;
+    return func;
+}
+
+boost::json::object outputRegionJSON(const piecewiseAffineModel::region& r)
+{
+    boost::json::object region_json;
+    boost::json::object affine_function_json = outputAffineFunctionJSON(r.f);
+    boost::json::object guard_json = outputPredicateJSON(r.g);
+    region_json["f"] = affine_function_json;
+    region_json["g"] = guard_json;
+    return region_json;
+}
+
+boost::json::object outputModelJSON(const piecewiseAffineModel& model)
+{
+    boost::json::object model_json;
+    boost::json::array regions;
+    boost::json::array scale_vec;
+    for (auto& r : model.regions)
+    {
+        regions.push_back(outputRegionJSON(r));
+    }
+    model_json["regions"] = regions;
+    for (auto &c : model.scale_vec)
+    {
+        scale_vec.push_back(c);
+    }
+    model_json["scale_vec"] = scale_vec;
+    return model_json;
+}
+
 float distance(const std::vector<float>& p1, const std::vector<float>& p2)
 {
     // returns distance between p1 and p2 in the vector space using L2 norm.

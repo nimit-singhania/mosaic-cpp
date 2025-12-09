@@ -5,6 +5,8 @@
 #include <map>
 #include <vector>
 
+#include "boost/json.hpp"
+
 // Utilities for loading data and dumping the model.
 
 std::map<std::vector<float>, float> loadData(const std::string& path);
@@ -18,6 +20,8 @@ void outputGuardPredicate(const guardPredicate& g,
 void outputAffineFunction(const affineFunction& f,
                           const std::vector<float>& scale_vec = std::vector<float>());
 void outputModel(const piecewiseAffineModel& model);
+
+boost::json::object outputModelJSON(const piecewiseAffineModel& model);
 
 // Utilities for simple predicates.
 guardPredicate true_predicate(int n);

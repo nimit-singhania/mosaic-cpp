@@ -2,7 +2,10 @@
 #include "utils.hpp"
 
 #include <iostream>
+#include <fstream>
 #include <string>
+
+#include "boost/json.hpp"
 
 int sample()
 {
@@ -55,7 +58,7 @@ int main(int argc, char** argv)
 
     if (argc < 3)
     {
-        std::cout << "Usage: ./main <path_to_data> <threshold>" << std::endl;
+        std::cout << "Usage: ./main <path_to_data> <threshold> [<path_to_output_model]" << std::endl;
         return 0;
     }
 
@@ -65,6 +68,25 @@ int main(int argc, char** argv)
     auto m = learnModelFromData(data, std::stod(argv[2]));
     std::cout << "Model Output: " << std::endl;
     outputModel(m);
+    if (argc == 4)
+    {
+        auto model_path = argv[3];
+        auto model_json = outputModelJSON(m);
+        //boost::json::serialize(model_json, model_path);
+        std::fstream fs;
+        fs.open(model_path, std::ios::out);
+        if (!fs.is_open()) return 0;
+
+        boost::json::serializer sr;
+        sr.reset( &model_json );
+        while( ! sr.done() )
+        {
+            char buf[ 4000 ];
+            fs << sr.read( buf );
+        }
+
+        fs.close();
+    }
 
     return 0;
 }
