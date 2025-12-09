@@ -16,6 +16,7 @@ struct affineFunction
     float evaluate(const std::vector<float>& input)
     {
         float result = 0;
+        if (coeff.empty()) return result;
         for (int i = 0; i < input.size(); i++)
         {
             result += coeff[i]*input[i];
@@ -99,6 +100,7 @@ struct guardPredicate
     std::vector<orPredicate> clauses;
     bool evaluate(const std::vector<float>& input)
     {
+        if (clauses.empty()) return false;
         for (auto& c: clauses)
         {
             if (!c.evaluate(input))
