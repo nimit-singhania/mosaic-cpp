@@ -145,7 +145,7 @@ struct piecewiseAffineModel
 
         std::vector<float> normalized_input;
         for (int i = 0; i < input.size(); i++)
-            normalized_input.push_back(input.at(i)*scale_vec.at(i));
+            normalized_input.push_back(input.at(i)/scale_vec.at(i));
 
         for (auto& r : regions)
         {
