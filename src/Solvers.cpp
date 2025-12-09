@@ -254,8 +254,11 @@ void split_group(const set<vector<float>>& g, const vector<float>& ce, vector<se
     // if (it != groups.end())
     //    groups.erase(it);
 
-    new_groups.push_back(g_more);
-    new_groups.push_back(g_less);
+    if (found)
+    {
+        new_groups.push_back(g_more);
+        new_groups.push_back(g_less);
+    }
 }
 
 guardPredicate simplify(const vector<set<vector<float>>>& pos_groups,
