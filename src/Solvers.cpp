@@ -197,18 +197,42 @@ void split_group(const set<vector<float>>& g, const vector<float>& ce, vector<se
     bool found = false;
 
     // Manual heuristics to split the set.
-    g_less.clear();
-    g_more = g;
-    for (int i = 0; i < g.size() - 1; i++)
+    // Split by axis.
+    for (int i = 0; i < ce.size(); i++)
     {
-        auto p = *g_more.begin();
-        g_less.insert(p);
-        g_more.erase(g_more.begin());
-        if (!genPredicate(g_less, {ce}, ce.size()).clauses.empty() &&
-            !genPredicate(g_more, {ce}, ce.size()).clauses.empty())
+        g_less.clear();
+        g_more.clear();
+        bool infeasible = false;
+        for (auto &p : g)
         {
-            found = true;
-            break;
+            if (p[i] < ce[i]) g_less.emplace(p);
+            else if (p[i] > ce[i]) g_more.emplace(p);
+            else
+            {
+                infeasible = true;
+                break;
+            }
+        }
+        if (infeasible) continue;
+        found = true;
+        break;
+    }
+    // Global splitting heuristic.
+    if (!found)
+    {
+        g_less.clear();
+        g_more = g;
+        for (int i = 0; i < g.size() - 1; i++)
+        {
+            auto p = *g_more.begin();
+            g_less.insert(p);
+            g_more.erase(g_more.begin());
+            if (!genPredicate(g_less, {ce}, ce.size()).clauses.empty() &&
+                !genPredicate(g_more, {ce}, ce.size()).clauses.empty())
+            {
+                found = true;
+                break;
+            }
         }
     }
 
