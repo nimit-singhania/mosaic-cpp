@@ -575,7 +575,7 @@ piecewiseAffineModel learnModelFromData(const map<vector<float>, float>& data, f
                     already_labeled = true;
                     break;
             }
-            if (already_labeled) break;
+            if (already_labeled) continue;
 
             if (abs(affineFunctions[j].evaluate(p.first) - p.second) < threshold)
             {
