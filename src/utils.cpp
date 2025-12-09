@@ -1,7 +1,7 @@
 #include "utils.hpp"
 
-
 #include <iostream>
+#include <fstream>
 #include <cstdio>
 #include <cstdlib>
 #include <string>
@@ -51,6 +51,27 @@ std::map<std::vector<float>, float> loadData(const std::string& path)
     std::fclose(fp);
     return m;
 }
+
+piecewiseAffineModel loadModelJSON(char* model_path)
+{
+    std::fstream fs;
+    fs.open(model_path);
+    if (!fs.is_open())
+        return piecewiseAffineModel();
+
+    std::string serialized;
+    char c;
+    while ((c = fs.get()) != EOF)
+        serialized.push_back(c);
+
+    auto model_jv = boost::json::parse(serialized);
+    auto m = parseModelJSON(model_jv.as_object());
+
+    fs.close();
+    return m;
+}
+
+
 
 std::string vectorString(const std::vector<float>& v)
 {
