@@ -1,4 +1,4 @@
-.PHONY: all
+.PHONY: all clean
 all: main infer model_stats
 
 main: train.cpp src/*.cpp alglib-cpp/src/*.cpp include/*.hpp
@@ -7,3 +7,6 @@ infer: infer.cpp src/utils.cpp include/*.hpp
 	g++ -std=c++11 -O3 -I include/ src/utils.cpp infer.cpp -o infer -lboost_json
 model_stats: model_stats.cpp src/utils.cpp include/*.hpp
 	g++ -std=c++11 -O3 -I include/ src/utils.cpp model_stats.cpp -o model_stats -lboost_json
+
+clean:
+	rm main infer model_stats
