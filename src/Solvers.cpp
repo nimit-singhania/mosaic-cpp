@@ -9,7 +9,7 @@
 #define UNIGRAM_PREDICATE
 #define NORMALIZE
 
-#define MAX_ITERATIONS 10
+#define MAX_ITERATIONS 60
 
 using namespace std;
 
