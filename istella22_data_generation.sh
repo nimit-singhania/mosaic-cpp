@@ -2,8 +2,8 @@
 
 tar -tf istella22.tar.gz
 
-tar -xvf istell22.tar.gz istella22/train.svm.gz
-tar -xvf istell22.tar.gz istella22/test.svm.gz
+tar -xvf istella22.tar.gz istella22/train.svm.gz
+tar -xvf istella22.tar.gz istella22/test.svm.gz
 cd istella22
 
 # Train data sets.
