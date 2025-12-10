@@ -1,12 +1,12 @@
 # Preliminary Results with ISTELLA22 Dataset
 To assess the efficacy of the tool, we trained multiple piecewise affine models and evaluated their efficacy on test data-sets.
 
-We report the RMSE (on test and train data-set) for each of the versions created for ISTELLA22 data-set.
+We report the RMSE (on test and train data-set) and precision for each of the versions created for ISTELLA22 data-set.
 
 
 | Data-set         | Train RMSE       | Test RMSE    | 
 |---------------|----------------|------------|
-| `istell22_v1.txt`| 2.01595          | 2.09373      |
+| `istell22_v1.txt`| **2.01595**          | **2.09373**      |
 | `istell22_v3.txt`| 5.33884          | 3.3611       |
 | `istell22_v4.txt`| 2.07402          | 2.93968      |
 
@@ -14,6 +14,13 @@ We note that we ran each model training with the following command:
 ```
     ./main <train_set> 0.5 <model_output_path>
 ```
+We measure the precision of the model by computing the fraction of points on which the error is less than the threshold 0.5.
+
+| Data-set         | Train Precision       | Test Precision    | 
+|---------------|----------------|------------|
+| `istell22_v1.txt`| 0.0315858          | 0.0147568      |
+| `istell22_v3.txt`| 0.0217212          | 0.0074451       |
+| `istell22_v4.txt`| 0.120344          | 0.11215      |
 
 Further, we observe that the train RMSE is quite huge as compared to the expected error of 0.5. This is because of an optimization in the training algorithm, that limits the number of iterations that the guard learning method runs for (to optimize the training time). We set it to 60 for the current training. Increasing the iterations both increases the training time and the complexity of the model learnt. Improved methods for training the model are currently being considered.
 
@@ -22,3 +29,11 @@ We also observe that the scaling of the model reduces with additional features a
 | Data-set         | Train RMSE       | Test RMSE    | 
 |--------------|----------------|------------|
 |`istella22_v5.txt` | 29.2449          | 37.4807      |
+
+
+| Data-set         | Train Precision       | Test Precision    | 
+|---------------|----------------|------------|
+| `istell22_v5.txt`| **0.677003**         | **0.676903**      |
+
+Clearly, the precision is highest for the unnormalized version here, however the difference in data-sets could also be responsible for the differences. We could not compile the model for this data-set for the normalized version of the features. With unnormalized features, fewer rounds of iteration suffice, while providing high coverage.
+
