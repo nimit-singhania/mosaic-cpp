@@ -66,8 +66,11 @@ int main(int argc, char** argv)
     auto data = loadData(std::string(argv[1]));
     std::cout << "Training piecewise affine model." << std::endl;
     auto m = learnModelFromData(data, std::stod(argv[2]));
-    std::cout << "Model Output: " << std::endl;
-    outputModel(m);
+    if (argc < 4)
+    {
+        std::cout << "Model Output: " << std::endl;
+        outputModel(m);
+    }
     if (argc == 4)
     {
         auto model_path = argv[3];
