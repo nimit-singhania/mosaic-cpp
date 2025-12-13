@@ -23,7 +23,7 @@ void outputModel(const piecewiseAffineModel& model);
 
 // JSON utilities.
 boost::json::object outputModelJSON(const piecewiseAffineModel& model);
-piecewiseAffineModel loadModelJSON(char* model_path);
+piecewiseAffineModel loadModelJSON(const std::string& model_path);
 piecewiseAffineModel parseModelJSON(const boost::json::object& model_json);
 
 // Utilities for simple predicates.
@@ -32,3 +32,6 @@ guardPredicate false_predicate(int n);
 
 // Utilities for distance computation in vector space.
 float distance(const std::vector<float>& p1, const std::vector<float>& p2);
+
+// Utilities for reading input configuration.
+std::map<std::string, std::string> read_configuration(int argc, char** argv);

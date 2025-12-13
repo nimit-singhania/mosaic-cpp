@@ -3,17 +3,52 @@
 #include <iostream>
 #include <fstream>
 
+// #define DEBUG
+
 int main(int argc, char** argv)
 {
-    if (argc < 4)
+#ifdef DEBUG
+    std::cerr << "Reading configuration: " << std::endl;
+    for (int i = 0; i < argc - 1; i++)
     {
-        std::cout << "Usage: ./infer <model_file> <test_file> <threshold>\n";
+        std::cerr << argv[i+1] << ", " << std::endl;
+    }
+#endif
+    auto config_map = read_configuration(argc, argv);
+#ifdef DEBUG
+    std::cerr << "Read Configuration: " << std::endl;
+    for (auto& p: config_map)
+    {
+        std::cerr << "(" << p.first << ": " << p.second << "), " << std::endl;
+    }
+#endif
+    if (config_map.find("h") != config_map.end() ||
+        config_map.find("help") != config_map.end())
+    {
+        std::cout << "Usage: ./infer -i <model_file> -t <threshold> <test_file> \n";
+
+        std::cout << std::endl;
+        std::cout << "Options: " << std::endl;
+        std::cout << "-i: " << "Input model for which inference is run." << std::endl;
+        std::cout << "-t: " << "Error threshold to evaluate precision of the model inference." << std::endl;
         return 0;
     }
 
-    auto model = loadModelJSON(argv[1]);
-    auto test_data = loadData(argv[2]);
-    float threshold = std::stof(argv[3]);
+    std::string model_path, test_data_path;
+    float threshold = 0.5;
+
+    if (config_map.find("i") != config_map.end())
+    {
+        model_path = config_map["i"];
+    }
+    if (config_map.find("t") != config_map.end())
+    {
+        threshold = std::stof(config_map["t"].c_str());
+    }
+    test_data_path = argv[argc - 1];
+
+    auto model = loadModelJSON(model_path);
+    auto test_data = loadData(test_data_path);
 
     float squared_error = 0.0;
     int error_count = 0;

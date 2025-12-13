@@ -21,6 +21,8 @@
  *     models.
  */
 
+extern int num_splits;
+
 piecewiseAffineModel learnModelFromData(const std::map<std::vector<float>, float>& data, float threshold);
 
 piecewiseAffineModel learnModelFromTrajectories(std::vector<std::vector<std::pair<float,float>>>& trajectories, float threshold);

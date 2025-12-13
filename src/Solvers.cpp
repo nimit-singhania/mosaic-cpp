@@ -6,10 +6,10 @@
 
 // #define DEBUG
 #define SIMPLIFY
-#define UNIGRAM_PREDICATE
 #define NORMALIZE
 
-#define MAX_ITERATIONS 60
+// Global configurations
+int num_splits = 60;
 
 using namespace std;
 
@@ -43,7 +43,6 @@ guardPredicate genPredicate(const set<vector<float>>& p,
     if (p.size() == 0) return false_predicate(num_vars);
     if (n.size() == 0) return true_predicate(num_vars);
 
-#ifdef UNIGRAM_PREDICATE
     // Try simple heuristics: xi >= n for satisfiability.
     for (int i = 0; i < num_vars; i++)
     {
@@ -79,7 +78,6 @@ guardPredicate genPredicate(const set<vector<float>>& p,
         found = true;
         break;
     }
-#endif
 
 #ifdef NORMALIZE
     // Another heuristic: xi + xj >= n.
@@ -383,7 +381,7 @@ guardPredicate genGuard(set<vector<float>>& pos_points,
     neg_groups.push_back({*neg_points.begin()});
 
     int iter_count = 0;
-    while (iter_count <= MAX_ITERATIONS)
+    while (iter_count <= num_splits)
     {
 #ifdef DEBUG
         // std::cerr << "Iteration " << iter_count++ << std::endl;
@@ -402,7 +400,7 @@ guardPredicate genGuard(set<vector<float>>& pos_points,
                 counterexamples.emplace_back(p);
             }
         }
-        if (counterexamples.empty() || iter_count == MAX_ITERATIONS)
+        if (counterexamples.empty() || iter_count == num_splits)
         {
 #ifdef SIMPLIFY
             g = simplify(pos_groups, neg_groups, num_vars);

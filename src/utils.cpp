@@ -52,7 +52,7 @@ std::map<std::vector<float>, float> loadData(const std::string& path)
     return m;
 }
 
-piecewiseAffineModel loadModelJSON(char* model_path)
+piecewiseAffineModel loadModelJSON(const std::string& model_path)
 {
     std::fstream fs;
     fs.open(model_path);
@@ -349,4 +349,41 @@ guardPredicate false_predicate(int n)
     o.terms.push_back(pred);
     g.clauses.push_back(o);
     return g;
-} 
+}
+
+bool contains_value(std::string config)
+{
+    return config.find_first_of("=") != std::string::npos;
+}
+
+std::map<std::string, std::string> read_configuration(int argc, char** argv)
+{
+    // Format: (--config | -c | --config=value | --config value)*
+    std::map<std::string, std::string> config_map;
+    for (int i = 1; i < argc; i++)
+    {
+        std::string config = argv[i];
+        if (config.find_first_of("-") == std::string::npos)
+            continue;
+    
+        if (contains_value(argv[i]))
+        {
+            // format --config=value.
+            std::string confg_and_value = argv[i];
+            int start_pos = confg_and_value.find_last_of("-");
+            int pos = confg_and_value.find_first_of("=");
+            config_map.emplace(confg_and_value.substr(start_pos + 1, pos - start_pos),
+                               confg_and_value.substr(pos+1));
+        }
+        else
+        {
+            // -c v | -c
+            int pos = config.find_last_of("-");
+            if (i < argc - 1 && argv[i+1][0] != '-')
+                config_map.emplace(config.substr(pos+1), argv[i+1]);
+            else
+                config_map.emplace(config.substr(pos+1), "1");
+        }
+    }
+    return config_map;
+}

@@ -56,28 +56,68 @@ int main(int argc, char** argv)
     // Run a sample program and evaluate correctness.
     // sample();
 
-    if (argc < 3)
+    auto config_map = read_configuration(argc, argv);
+
+    if (config_map.find("h") != config_map.end() ||
+        config_map.find("help") != config_map.end())
     {
-        std::cout << "Usage: ./main <path_to_data> <threshold> [<path_to_output_model]" << std::endl;
+        std::cout << "Usage: ./main -t <threshold> [-o <path_to_output_model>] <path_to_train_data>" << std::endl;
+        std::cout << std::endl;
+        std::cout << "Options:" << std::endl;
+        std::cout << " -t <value> | --threshold <value>: "
+                  << " The error threshold for training on input-data." << std::endl;
+        std::cout << " -o <path> | --output <path>: "
+                  << " The file path to output learnt model." << std::endl;
+        std::cout << " -s <value> | --num_splits <value>: "
+                  << "Number of split iterations during guard predicate training." << std::endl;
+        std::cout << " -h | --help: "
+                  << "Usage and options for the model training." << std::endl;
         return 0;
     }
 
+    float threshold = 0.5;
+    std::string path_to_train_data, path_to_output_model;
+    if (config_map.find("t") != config_map.end())
+    {
+        threshold = std::stof(config_map["t"]);
+    }
+    if (config_map.find("threshold") != config_map.end())
+    {
+        threshold = std::stof(config_map["threshold"]);
+    }
+    if (config_map.find("o") != config_map.end())
+    {
+        path_to_output_model = config_map["o"];
+    }
+    if (config_map.find("output") != config_map.end())
+    {
+        path_to_output_model = config_map["output"];
+    }
+    if (config_map.find("s") != config_map.end())
+    {
+        num_splits = std::stoi(config_map["s"]);
+    }
+    if (config_map.find("num_splits") != config_map.end())
+    {
+        num_splits = std::stoi(config_map["num_splits"]);
+    }
+    path_to_train_data = argv[argc - 1];
+
     std::cout << "Loading data ... " << std::endl;
-    auto data = loadData(std::string(argv[1]));
+    auto data = loadData(path_to_train_data);
     std::cout << "Training piecewise affine model." << std::endl;
-    auto m = learnModelFromData(data, std::stod(argv[2]));
-    if (argc < 4)
+    auto m = learnModelFromData(data, threshold);
+    if (path_to_output_model.empty())
     {
         std::cout << "Model Output: " << std::endl;
         outputModel(m);
     }
-    if (argc == 4)
+    else
     {
-        auto model_path = argv[3];
         auto model_json = outputModelJSON(m);
-        //boost::json::serialize(model_json, model_path);
+        //boost::json::serialize(model_json, path_to_output_model);
         std::fstream fs;
-        fs.open(model_path, std::ios::out);
+        fs.open(path_to_output_model, std::ios::out);
         if (!fs.is_open()) return 0;
 
         boost::json::serializer sr;
