@@ -29,8 +29,9 @@ int main(int argc, char** argv)
 
         std::cout << std::endl;
         std::cout << "Options: " << std::endl;
-        std::cout << "-i: " << "Input model for which inference is run." << std::endl;
-        std::cout << "-t: " << "Error threshold to evaluate precision of the model inference." << std::endl;
+        std::cout << "-i <model_file> | --input <model_file>: " << "Input model for which inference is run." << std::endl;
+        std::cout << "-t <value> | --threshold <value>: " << "Error threshold to evaluate precision of the model inference." << std::endl;
+        std::cout << "-h | --help: " << "Usage instructions for the tool." << std::endl;
         return 0;
     }
 
@@ -41,9 +42,17 @@ int main(int argc, char** argv)
     {
         model_path = config_map["i"];
     }
+    if (config_map.find("input") != config_map.end())
+    {
+        model_path = config_map["input"];
+    }
     if (config_map.find("t") != config_map.end())
     {
         threshold = std::stof(config_map["t"].c_str());
+    }
+    if (config_map.find("threshold") != config_map.end())
+    {
+        threshold = std::stof(config_map["threshold"].c_str());
     }
     test_data_path = argv[argc - 1];
 
