@@ -2,11 +2,22 @@
 
 Mosaic is a tool to learn piecewise affine models from input-output data. A piecewise affine model consists of multiple regions each region guarded by a predicate and associated with an affine function that defines the dynamics of the model in the region. To compute the model output for an input, the region for the input is located, followed by computation of the affine function on the input. The piecewise nature enables the model to represent non-linear behavior while affine dynamics provide explanability and ease of model checking.
 
-## Running the tool
+## Prerequisites
+The tool relies on a C++ compiler and BOOST libraries. A C++ compliant compiler like GCC or CLANG (LLVM) should suffice.
+The BOOST libraries provide necessary functionality to generate JSON model represenations. These can be obtained through standard software sources.
+
+On Mac, to obtain the necessary prereqs, install:
+```
+	brew install llvm
+        brew install boost
+```
+
 To compile the project, we rely on [ALGLIB](http://alglib.net). The free edition can be downloaded from the site.
 The source `alglib-cpp.tar.gz` can be obtained, which can be compiled with the project to generate the tool.
 ALGLIB provides necessary solvers for the tool to solve various regressions and constraints within the problem domain.
 
+
+## Running the tool
 To compile:
 ```
     git clone https://github.com/nimit-singhania/mosaic-cpp.git
