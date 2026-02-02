@@ -621,6 +621,9 @@ piecewiseAffineModel learnModelFromData(const map<vector<float>, float>& data, f
     while (covered.size() < normalized_data.size())
     {
         affineFunction l = genAffineFunction(normalized_data, covered, threshold, num_vars);
+#ifdef DEBUG
+        std::cerr << "Found an affine function: " << outputAffineFunction(l) << std::endl;
+#endif
         if (l.coeff.empty()) break;
         for (auto p : normalized_data)
         {

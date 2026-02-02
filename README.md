@@ -4,12 +4,12 @@ Mosaic is a tool to learn piecewise affine models from input-output data. A piec
 
 ## Prerequisites
 The tool relies on a C++ compiler and BOOST libraries. A C++ compliant compiler like GCC or CLANG (LLVM) should suffice.
-The BOOST libraries provide necessary functionality to generate JSON model represenations. These can be obtained through standard software sources.
+The BOOST libraries provide necessary functionality to generate JSON model represenations. These can be obtained through standard software sources (or directly from https://boost.org).
 
 On Mac, to obtain the necessary prereqs, install:
 ```
-	brew install llvm
-        brew install boost
+    brew install llvm
+    brew install boost
 ```
 
 To compile the project, we rely on [ALGLIB](http://alglib.net). The free edition can be downloaded from the site.
@@ -24,6 +24,7 @@ To compile:
     cd mosaic-cpp
     tar -xvf alglib-cpp.tar.gz
     make
+    # To make on Intel machines, use `make intel`
 ```
 
 To run:
@@ -31,10 +32,10 @@ To run:
     ./main -h
 ```
 
-The tool accepts a CSV file with rows corresponding to data vectors, with first N-1 columns for the input vector while the last column for the output floating point value.
-
 
 ## Sample evaluation
+The tool accepts a CSV file with rows corresponding to data vectors, with first N-1 columns for the input vector while the last column for the output floating point value.
+
 Sample data is available in `test_data.txt`. This corresponds to a data-set where the input is a 2-dimensional floating vector, and the output is a single floating point value. The threshold corresponds to the error threshold acceptable on the model output. To run the tool on this test data:
 
 ```
@@ -54,9 +55,10 @@ The dataset `istella22.tar.gz` can be downloaded from the [data-set website](htt
 ```
     sh istella_data_generation.sh
     make
+    ./main -t <train_error_threshold> -o <model_file> istella22<train_data.txt>
     ./infer -i <model_file> -t <test_error_thrshold> istella22/<test_data.txt>
 ```
-The inference will output the expected and inferred output and report the RMSE at the end of the report. The `model_file` can be optionally dumped from the `main` method. The test data is generated from the data generation script, for example `istella22/istella_v1test.txt`. Preliminary evaluation of the tool is available [here](docs/PreliminaryResultsWithISTELLA22.md).
+The inference will output the expected and inferred output and report the RMSE at the end of the report. The and train and test data is generated from the data generation script, for example `istella22/istella_v4.txt` and `istella22/istella_v4test.txt`. Preliminary evaluation of the tool is available [here](docs/PreliminaryResultsWithISTELLA22.md).
 
 For more details about the implementation, please refer to [1].
 
