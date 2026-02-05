@@ -6,7 +6,7 @@ We report the RMSE (on test and train data-set) and precision for each of the ve
 
 | Data-set         | Train RMSE       | Test RMSE    | 
 |---------------|----------------|------------|
-| `istell22_v1.txt`| 2.01595          | 2.09373      |
+| `istell22_v1.txt`| 0.640165          | 0.500014      |
 | `istell22_v2.txt`| **0.61914**          | **0.330402**     |
 | `istell22_v3.txt`| 5.33884          | 3.3611       |
 | `istell22_v4.txt`| 1.32875          | 1.99878      |
@@ -20,7 +20,7 @@ We measure the precision of the model by computing the fraction of points on whi
 
 | Data-set         | Train Precision       | Test Precision    | 
 |---------------|----------------|------------|
-| `istell22_v1.txt`| 0.0315858          | 0.0147568      |
+| `istell22_v1.txt`| 0.915276          | 0.954638      |
 | `istell22_v2.txt`| **0.918204**          | **0.976903**      |
 | `istell22_v3.txt`| 0.0217212          | 0.0074451       |
 | `istell22_v4.txt`| 0.879656          | 0.53271      |
