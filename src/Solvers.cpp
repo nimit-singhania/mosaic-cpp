@@ -388,11 +388,6 @@ guardPredicate genGuard(set<vector<float>>& pos_points,
 #endif
         guardPredicate g = genPredicate(pos_groups, neg_groups, num_vars);
         vector<vector<float>> counterexamples; 
-        for (auto& p : neg_points)
-        {
-            if (g.evaluate(p) == true)
-                counterexamples.emplace_back(p);
-        }
         for (auto& p : pos_points)
         {
             if (g.evaluate(p) == false)
@@ -400,6 +395,12 @@ guardPredicate genGuard(set<vector<float>>& pos_points,
                 counterexamples.emplace_back(p);
             }
         }
+        for (auto& p : neg_points)
+        {
+            if (g.evaluate(p) == true)
+                counterexamples.emplace_back(p);
+        }
+        
         if (counterexamples.empty() || iter_count == num_splits)
         {
 #ifdef SIMPLIFY
