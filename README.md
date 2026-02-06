@@ -58,7 +58,7 @@ The dataset `istella22.tar.gz` can be downloaded from the [data-set website](htt
     ./main -t <train_error_threshold> -o <model_file> istella22<train_data.txt>
     ./infer -i <model_file> -t <test_error_thrshold> istella22/<test_data.txt>
 ```
-The inference will output the expected and inferred output and report the RMSE at the end of the report. The and train and test data is generated from the data generation script, for example `istella22/istella_v1.txt` and `istella22/istella_v1test.txt`. Preliminary evaluation of the tool is available [here](docs/PreliminaryResultsWithISTELLA22.md).
+The inference will output the expected and inferred output and report the RMSE at the end of the report. The and train and test data is generated from the data generation script, for example `istella22/istella_v5.txt` and `istella22/istella_v5test.txt`. Preliminary evaluation of the tool is available [here](docs/PreliminaryResultsWithISTELLA22.md).
 
 For more details about the implementation, please refer to [1].
 
