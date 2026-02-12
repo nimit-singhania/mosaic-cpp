@@ -11,10 +11,9 @@ make train_naive_bayes infer_naive_bayes
 
 The observed performance characteristics are here:
 
---------------------------------------------------------
 modelling approach |	Train RMSE | 	Train Precision |	Test RMSE |	Test Precision |
+------------------|------------|----------|---------|-------|
 Piecewise affine model | 	0.519565 |	0.919753 |	0.205845 |	0.990627|
 Naive Bayes	| 	0.551295| 	0.917752 | 	0.211423 | 	0.98554 |
---------------------------------------------------------
 
 As can be observed, the two models perform similarly with the piecewise affine model having a slight edge in performance over the Naive Bayes model. The Naive Bayes model is simpler however and provides reasonable performance with a simple interface. This definitely provides a baseline that can be used to improve the piecewise affine modelling approach and its performance. One possibility is to use higher precision values and coefficients (for example the Naive Bayes model leverages double-precision to avoid NAN values). 
