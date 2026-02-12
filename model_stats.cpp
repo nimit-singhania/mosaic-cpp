@@ -8,7 +8,8 @@ int main(int argc, char** argv)
     {
         std::cout << "Usage: ./model_stats <model_file>" << std::endl;
     }
-    auto m = loadModelJSON(argv[1]);
+    auto model_json = loadModelJSON(argv[1]);
+    auto m = parseModelJSON(model_json);
 
     std::cout << "Number of Regions: " << m.regions.size();
 

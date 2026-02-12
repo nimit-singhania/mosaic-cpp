@@ -24,7 +24,7 @@ We measure the precision of the model by computing the fraction of points on whi
 | `istell22_v2.txt`| 0.918204          | **0.976903      |
 | `istell22_v3.txt`| 0.0217212          | 0.0074451       |
 | `istell22_v4.txt`| 0.879656          | 0.53271      |
-| `istell22_v5.txt`| **0.919753          | **0.990627**      |
+| `istell22_v5.txt`| **0.919753**          | **0.990627**      |
 
 Further, we observe that the train RMSE is quite huge as compared to the expected error of 0.5. This is because of an optimization in the training algorithm, that limits the number of iterations that the guard learning method runs for (to optimize the training time). We set it to 60 for the current training (via option `-s 60`). Increasing the iterations both increases the training time and the complexity of the model learnt. Improved methods for training the model are currently being considered.
 

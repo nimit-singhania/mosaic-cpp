@@ -52,12 +52,12 @@ std::map<std::vector<float>, float> loadData(const std::string& path)
     return m;
 }
 
-piecewiseAffineModel loadModelJSON(const std::string& model_path)
+boost::json::object loadModelJSON(const std::string& model_path)
 {
     std::fstream fs;
     fs.open(model_path);
     if (!fs.is_open())
-        return piecewiseAffineModel();
+        return boost::json::object();
 
     std::string serialized;
     char c;
@@ -65,10 +65,9 @@ piecewiseAffineModel loadModelJSON(const std::string& model_path)
         serialized.push_back(c);
 
     auto model_jv = boost::json::parse(serialized);
-    auto m = parseModelJSON(model_jv.as_object());
 
     fs.close();
-    return m;
+    return model_jv.as_object();
 }
 
 

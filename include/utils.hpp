@@ -23,7 +23,7 @@ void outputModel(const piecewiseAffineModel& model);
 
 // JSON utilities.
 boost::json::object outputModelJSON(const piecewiseAffineModel& model);
-piecewiseAffineModel loadModelJSON(const std::string& model_path);
+boost::json::object loadModelJSON(const std::string& model_path);
 piecewiseAffineModel parseModelJSON(const boost::json::object& model_json);
 
 // Utilities for simple predicates.

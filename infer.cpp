@@ -56,7 +56,8 @@ int main(int argc, char** argv)
     }
     test_data_path = argv[argc - 1];
 
-    auto model = loadModelJSON(model_path);
+    auto model_json = loadModelJSON(model_path);
+    auto model = parseModelJSON(model_json);
     auto test_data = loadData(test_data_path);
 
     float squared_error = 0.0;
