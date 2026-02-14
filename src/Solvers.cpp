@@ -657,7 +657,7 @@ piecewiseAffineModel learnModelFromData(const map<vector<float>, float>& data, f
         for (int k = 0; k < affineFunctions.size(); k++)
         {
             if (cover_size[k] == -1) continue;
-            if (cover_size[j] == -1 || cover_size[j] < cover_size[k])
+            if (cover_size[j] == -1 || cover_size[j] > cover_size[k])
             {
                 j = k;
             }
