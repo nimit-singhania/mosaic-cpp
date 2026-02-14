@@ -1,6 +1,7 @@
 # mosaic-cpp
 
-**(NEW!) Comparison with Naive Bayes modelling approach [here](docs/ComparisonWithNaiveBayes.md)
+**(NEW!) Results on general ML datasets [here](docs/ResultsWithMLDatasets.md)**
+**(NEW!) Comparison with Naive Bayes modelling approach [here](docs/ComparisonWithNaiveBayes.md)**
 
 Mosaic is a tool to learn piecewise affine models from input-output data. A piecewise affine model consists of multiple regions each region guarded by a predicate and associated with an affine function that defines the dynamics of the model in the region. To compute the model output for an input, the region for the input is located, followed by computation of the affine function on the input. The piecewise nature enables the model to represent non-linear behavior while affine dynamics provide explanability and ease of model checking.
 
@@ -31,7 +32,7 @@ To compile:
 
 To run:
 ```
-    ./main -h
+    ./train -h
 ```
 
 
@@ -41,7 +42,7 @@ The tool accepts a CSV file with rows corresponding to data vectors, with first 
 Sample data is available in `test_data.txt`. This corresponds to a data-set where the input is a 2-dimensional floating vector, and the output is a single floating point value. The threshold corresponds to the error threshold acceptable on the model output. To run the tool on this test data:
 
 ```
-    ./main -t 0.5 test_data.txt 
+    ./train -t 0.5 test_data.txt 
 ```
 
 ## Evaluating the tool
@@ -57,7 +58,7 @@ The dataset `istella22.tar.gz` can be downloaded from the [data-set website](htt
 ```
     sh istella_data_generation.sh
     make
-    ./main -t <train_error_threshold> -o <model_file> istella22<train_data.txt>
+    ./train -t <train_error_threshold> -o <model_file> istella22<train_data.txt>
     ./infer -i <model_file> -t <test_error_thrshold> istella22/<test_data.txt>
 ```
 The inference will output the expected and inferred output and report the RMSE at the end of the report. The and train and test data is generated from the data generation script, for example `istella22/istella_v5.txt` and `istella22/istella_v5test.txt`. Preliminary evaluation of the tool is available [here](docs/PreliminaryResultsWithISTELLA22.md).

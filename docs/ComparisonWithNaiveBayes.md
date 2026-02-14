@@ -1,6 +1,6 @@
 # Comparison with Naive Bayes
 
-A Naive Bayes model makes simplistic assumption that given the output label, the features are independent of each other and hence their contributions can computed and accumulated independently. We assume that given features have a Normal distribution. We assess the performance of the Naive Bayes model in comparison to the modelling approach presented in this work. As presented in the [Preliminary Results](docs/PreliminaryResultsWithISTELLA22.md), the best performing configuration is selected as representative. To build a Naive Bayes model, we perform the following commands:
+A Naive Bayes model makes simplistic assumption that given the output label, the features are independent of each other and hence their contributions can computed and accumulated independently. We assume that given features have a Normal distribution. We assess the performance of the Naive Bayes model in comparison to the modelling approach presented in this work. As presented in the [Preliminary Results](PreliminaryResultsWithISTELLA22.md), the best performing configuration is selected as representative. To build a Naive Bayes model, we perform the following commands:
 
 ```
 make train_naive_bayes infer_naive_bayes

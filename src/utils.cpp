@@ -39,11 +39,25 @@ std::map<std::vector<float>, float> loadData(const std::string& path)
             int end_pos = buf.find_first_of(",", pos);
             if (end_pos == std::string::npos)
             {
-                m.emplace(input, std::stof(buf.substr(pos).c_str()));
+                try {
+                    m.emplace(input, (float)std::stod(buf.substr(pos).c_str()));
+                }
+                catch(std::exception& e)
+                {
+                    std::cerr << "Error found while reading: " << buf.substr(pos) << std::endl;
+                    throw e;
+                }
                 input.clear();
                 break;
             }
-            input.push_back(std::stof(buf.substr(pos, end_pos - pos).c_str()));;
+            try {
+                input.push_back((float)std::stod(buf.substr(pos, end_pos - pos).c_str()));
+            }
+            catch(std::exception& e)
+            {
+                std::cerr << "Error found while reading: " << buf.substr(pos, end_pos - pos) << std::endl;
+                throw e;
+            }
             pos = end_pos + 1;
         }
         buf.clear();
