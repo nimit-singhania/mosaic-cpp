@@ -14,7 +14,7 @@ We report the RMSE (on test and train data-set) and precision for each of the ve
 
 We note that we ran each model training with the following command:
 ```
-    ./main -t 0.5 -o <model_output_path> -s 60 <train_set>
+    ./train -t 0.5 -o <model_output_path> -s 60 <train_set>
 ```
 We measure the precision of the model by computing the fraction of points on which the error is less than the threshold 0.5.
 
