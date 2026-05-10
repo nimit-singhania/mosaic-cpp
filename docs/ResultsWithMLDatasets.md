@@ -27,4 +27,4 @@ We leverage the diagnostic [data-set](https://www.kaggle.com/datasets/uciml/brea
 |Naive Bayes | 0.347572 | 0.790909|
 |Mosaic | 0.165145 | 0.972727|
 
-Again Mosaic is able to scale better, and despite the low number of data-points, it is able to achieve a precision of 97% or higher. This reflects the power of Mosaic, and its ability to automatically learn models from input data.
+Again Mosaic is able to scale better, and despite the low number of data-points, it is able to achieve a precision of 90% or higher. This reflects the power of Mosaic, and its ability to automatically learn models from input data.
