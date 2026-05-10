@@ -1,6 +1,7 @@
 # mosaic-cpp
 
 **(NEW!) Results on general ML datasets [here](docs/ResultsWithMLDatasets.md)**
+
 **(NEW!) Comparison with Naive Bayes modelling approach [here](docs/ComparisonWithNaiveBayes.md)**
 
 Mosaic is a tool to learn piecewise affine models from input-output data. A piecewise affine model consists of multiple regions each region guarded by a predicate and associated with an affine function that defines the dynamics of the model in the region. To compute the model output for an input, the region for the input is located, followed by computation of the affine function on the input. The piecewise nature enables the model to represent non-linear behavior while affine dynamics provide explanability and ease of model checking.
@@ -13,6 +14,7 @@ On Mac, to obtain the necessary prereqs, install:
 ```
     brew install llvm
     brew install boost
+    export LD_LIBRARY_PATH="/opt/homebrew/opt/boost/lib:${LD_LIBRARY_PATH}" # for recent installations where library lookup is required.
 ```
 
 To compile the project, we rely on [ALGLIB](http://alglib.net). The free edition can be downloaded from the site.
@@ -25,6 +27,8 @@ To compile:
 ```
     git clone https://github.com/nimit-singhania/mosaic-cpp.git
     cd mosaic-cpp
+    # Get alglib.
+    wget https://www.alglib.net/translator/re/alglib-4.07.0.cpp.gpl.tgz
     tar -xvf alglib-cpp.tar.gz
     make
     # To make on Intel machines, use `make intel`
