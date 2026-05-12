@@ -8,6 +8,7 @@ We leverage the ISIC 2024 dataset ([link](https://www.kaggle.com/competitions/is
 To train the model:
 
 ```
+mkdir -p models
 ./train -t 0.1 -o models/<model_name>.json data-sets/<data_set_name>_train.csv
 ./train_naive_bayes  -o models/<model_name>.json data-sets/<data_set_name>_train.csv
 ```
@@ -15,7 +16,7 @@ To train the model:
 |modelling approach | Test RMSE | Test Precision (test error < 0.1)|
 |---------------|----------------|------------|
 |Naive Bayes | 0.19317 | 0.883364|
-|Mosaic | 0.0434287 | 0.998114|
+|Mosaic | 0.0431631 | 0.998137|
 
 Note that we consider a label 0 for benign and 1 for malignant. We treat this as a numerical label (rather than a categorial label). This is because Mosaic learns a numerical output. We observe that Naive Bayes is not able to perform as well, which is probably due to a strong assumption that all the input features are independent. Mosaic does not rely on such an assumption.
 
@@ -25,6 +26,6 @@ We leverage the diagnostic [data-set](https://www.kaggle.com/datasets/uciml/brea
 |modelling approach | Test RMSE | Test Precision (test error < 0.1)|
 |---------------|----------------|------------|
 |Naive Bayes | 0.347572 | 0.790909|
-|Mosaic | 0.165145 | 0.972727|
+|Mosaic | 0.301511 | 0.909091|
 
 Again Mosaic is able to scale better, and despite the low number of data-points, it is able to achieve a precision of 90% or higher. This reflects the power of Mosaic, and its ability to automatically learn models from input data.
