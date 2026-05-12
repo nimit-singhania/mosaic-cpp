@@ -14,7 +14,7 @@ On Mac, to obtain the necessary prereqs, install:
 ```
     brew install llvm
     brew install boost
-    export LD_LIBRARY_PATH="/opt/homebrew/opt/boost/lib:${LD_LIBRARY_PATH}" # for recent installations where library lookup is required.
+    export CPATH="-I/opt/homebrew/opt/boost/include:${CPATH}" # to make Boost utility available.
 ```
 
 To compile the project, we rely on [ALGLIB](http://alglib.net). The free edition can be downloaded from the site.
